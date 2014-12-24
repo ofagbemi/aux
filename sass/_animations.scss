@@ -74,3 +74,11 @@
     @include transform(scale(0.9, 0.9));
   }
 }
+
+@include keyframes(move-background-vertical-anim) {
+    0%, 5%, 95%, 100% {
+      background-position: 10px center;
+    } 45%, 55% {
+      background-position: 10px 64%;
+    }
+}

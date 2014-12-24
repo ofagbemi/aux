@@ -5,11 +5,15 @@
   width: 100%;
 }
 
+.spotify-object:not(.active) {
+    display: none;
+}
+
 .spotify-object > .inner,
 .voting-object > .inner {
   position: relative;
   background-color: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 0 11px rgba(0, 0, 0, 0.47);
+  box-shadow: 0 0 11px rgba(0, 0, 0, 0.28);
   box-sizing: border-box;
   border-radius: 4px;
   text-align: center;
@@ -103,7 +107,7 @@
   background-size: cover;
   background-repeat: no-repeat;
   display: inline-block;
-  box-shadow: 4px 0 14px rgba(0, 0, 0, 0.52);
+  box-shadow: 4px 0 14px rgba(0, 0, 0, 0.28);
   border-radius: 4px;
 }
 

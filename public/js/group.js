@@ -200,7 +200,10 @@ $(document).ready(function() {
             if($(that).val() !== result.q) {return;}
             
             // TODO: render no results message when nothing is found
-            if(result.length === 0) {}
+            if(result.length === 0) {
+                return;
+            }
+            
             var html = result.html,
                 addTrackButtonHtml = '' +
                   '<div class="add-track-button">' +
@@ -213,11 +216,30 @@ $(document).ready(function() {
             loadingIcon.hide();
             searchResultsWrapper.html(html).show();
             
-            var innerTrackElems = searchResultsWrapper.find('.track .inner');
+            var trackElems = searchResultsWrapper.find('.track');
+            
+            // Make the first search result visible
+            var firstResultElem = trackElems.first().addClass('active');
+            
+            // Set the background to this element's background
+            // image
+            var img = firstResultElem.find('.inner .icon').css('background-image');
+            $('.group.swap-page > .background').css('background-image', img);
+
+            var innerTrackElems = trackElems
+                .find('.inner');
+            // Set the height on the artwork so that it forms a
+            // square
+            innerTrackElems
+                .find('.icon')
+                .css('height', innerTrackElems.find('.icon').width());
+            
             $(addTrackButtonHtml)
                 .click(groupFns.submitForVotingClickFn)
                 .appendTo(innerTrackElems)
             
+            // Update the displayed number of results
+            $('.search-results .num-tracks').text(trackElems.length);
 
             var tracks = result.tracks.items;
             for(var i = 0; i < tracks.length; i++) {

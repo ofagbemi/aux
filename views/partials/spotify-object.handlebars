@@ -1,6 +1,6 @@
 <div track-id="{{ id }}" class="spotify-object {{#ifCond type '===' 'track'}}track{{else}}{{#ifCond type '===' 'artist'}}artist{{else}}album{{/ifCond}}{{/ifCond}}">
   <div class="inner">
-    <div class="icon circle pop-in" style="
+    <div class="icon" style="
       {{#equal type 'track' }}
         {{#if album.images.[0].url}}
         background-image: url('{{ album.images.[0].url }}');
