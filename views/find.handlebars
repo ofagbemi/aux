@@ -1,0 +1,46 @@
+<div class="find swap-page content">
+  <header>
+    <h2>Find groups</h2>
+  </header>
+
+  <div id="groups">
+
+  </div>
+  <script>
+      $(document).ready(function() {
+          // wrap up find page click functions
+          var findClickFns = {
+              groupLinkFn: function(e) {
+                  // this switches context
+                  window.aux.swapper.slideIn($(this).attr('href'));
+                  e.preventDefault();
+              },
+          };
+        
+          if(navigator.geolocation) {
+              var findingDiv = $('<div></div>')
+                  .text('finding groups near your location')
+                  .appendTo('.find.content');
+              
+              var sendLocationQuery = function(geo) {
+                  $.ajax({
+                      type: 'GET',
+                      url: 'http://localhost:5000/find_nearby_groups',
+                      data: {
+                          longitude: geo.coords.longitude,
+                          latitude: geo.coords.latitude,
+                          html: true,  // render group html server side
+                      },
+                  }).done(function(html) {
+                      findingDiv.remove();
+                      $('#groups').html(html)
+                          .find('.group-link').click(findClickFns.groupLinkFn);
+                  });
+              };
+              navigator.geolocation.getCurrentPosition(sendLocationQuery);
+          } else {
+              
+          }
+      });
+  </script>
+</div>

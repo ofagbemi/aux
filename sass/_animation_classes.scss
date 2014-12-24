@@ -1,0 +1,38 @@
+@import 'mixins';
+@import 'animations';
+
+.slide-in {
+  @include animation(slide-in-anim 1s);
+}
+
+.slide-in-left {
+  @include animation(slide-in-left-anim 1s);
+}
+
+.slide-in-right {
+  @include animation(slide-in-right-anim 1s);
+}
+
+.slide-out-left {
+  @include animation(slide-out-left-anim 1s);
+}
+
+.slide-out-right {
+  @include animation(slide-out-right-anim 1s);
+}
+
+$time: 1, 2, 3, 4;
+
+@each $i in $time {
+  .slide-in-#{$i} {
+    @include animation(slide-in-anim #{$i}s);
+  }
+}
+
+.slide-out {
+  @include animation(slide-out-anim 1.7s);
+}
+
+.pop-in {
+  @include animation(pop-in-anim 0.8s);
+}

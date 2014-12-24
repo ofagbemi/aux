@@ -1,0 +1,76 @@
+@import 'mixins';
+
+@include keyframes(slide-in-anim) {
+  0% {
+    @include translate(0, -2000px);
+  }
+  100% {
+    @include translate(0, 0);
+  }
+}
+
+@include keyframes(slide-in-left-anim) {
+  0% {
+    @include translate(2000px, 0);
+  }
+  100% {
+    @include translate(0, 0);
+  }
+}
+
+@include keyframes(slide-in-right-anim) {
+  0% {
+    @include translate(-2000px, 0);
+  }
+  100% {
+    @include translate(0, 0);
+  }
+}
+
+@include keyframes(slide-out-left-anim) {
+  0% {
+    @include translate(0, 0);
+  }
+  100% {
+    @include translate(-2000px, 0);
+  }
+}
+
+@include keyframes(slide-out-right-anim) {
+  0% {
+    @include translate(0, 0);
+  }
+  100% {
+    @include translate(2000px, 0);
+  }
+}
+
+@include keyframes(slide-out-anim) {
+  0% {
+    @include translate(0px, 0px);
+  }
+  30% {
+    @include translate(0px, -80px);
+  }
+  45% {
+    @include translate(0px, -60px);
+  }
+  100% {
+    @include translate(0px, 9999px);
+  }
+}
+
+@include keyframes(pop-in-anim) {
+  0% {
+    @include transform(scale(0, 0));
+  }
+  65% {
+    @include transform((1.1, 1.1));
+  }
+  80% {
+    @include transform(scale(1.1, 1.1));
+  }
+  88% {
+    @include transform(scale(0.9, 0.9));
+  }
+}

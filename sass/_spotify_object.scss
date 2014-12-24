@@ -1,0 +1,226 @@
+.spotify-object,
+.voting-object {
+  border-radius: 2px;
+  margin-top: 11px;
+  width: 100%;
+}
+
+.spotify-object > .inner,
+.voting-object > .inner {
+  position: relative;
+  padding: 11px;
+  display: flex;
+  flex-wrap: nowrap;
+  background-color: white;
+  box-shadow: 0 0 4px rgba(124, 124, 124, 0.1);
+  box-sizing: border-box;
+}
+
+.voting-object {
+  display: flex;
+  flex-wrap: nowrap;
+  position: relative;
+}
+
+.voting-object > .inner {
+  display: inline-flex;
+  width: 80%;
+  position: relative;
+}
+
+.voting-object > .inner .votes-indicator {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  
+  background-color: rgba(180, 211, 240, 0.49);
+  height: 3px;
+  width: 100%;
+}
+
+.voting-object > .inner .votes-indicator > .bar {
+  background-color: #2993ec;
+  
+  width: 0%;
+  height: 100%;
+  transition: width 0.4s;
+}
+
+.voting-object .vote-button {
+  width: 20%;
+  box-sizing: border-box;
+  padding: 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgb(197, 83, 96);
+  border-radius: 0 4px 4px 0;
+  box-shadow: inset 0px -3px rgb(129, 35, 71);
+  
+  transition: box-shadow 0.2s, background-color 0.2s;
+}
+
+.voting-object .vote-button .num-votes {
+  color: rgb(255, 255, 235);
+  font-family: Helvetica Neue;
+  font-weight: 200;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.18);
+  
+  transition: margin-top 0.2s;
+}
+
+.voting-object .vote-button.active {
+  box-shadow: inset 2px 2px 1px #508C4E;
+  background-color: #65BE65;
+}
+
+.voting-object .vote-button.active .num-votes {
+  margin-top: 3px;
+}
+
+.spotify-object > .inner .cover,
+.voting-object > .inner .cover {
+  position: absolute;
+  height: 100%;
+  width: 0;
+  right: 0;
+  top: 0;
+  background-color: rgb(81, 176, 234);
+  z-index: 0;
+  overflow: hidden;
+  
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: width 0.8s;
+}
+
+.spotify-object .icon,
+.voting-object .icon {
+  width: 50px;
+  min-width: 50px;
+  height: 50px;
+  border-radius: 50px;
+  background-size: cover;
+  background-repeat: no-repeat;
+  display: inline-block;
+}
+
+.spotify-object .copy,
+.voting-object .copy {
+  display: inline-block;
+  margin-left: 11px;
+  font-family: 'Helvetica Neue';
+  margin-right: 35px;
+}
+
+.spotify-object .copy .header h2,
+.voting-object .copy .header h2 {
+  font-weight: 500;
+  font-size: 12px;
+}
+
+.spotify-object .copy .body,
+.voting-object .copy .body {
+  padding-top: 4px;
+}
+
+.spotify-object .copy .body .description,
+.voting-object .copy .body .description {
+  font-weight: 200;
+  color: #777;
+  font-size: 11px;
+}
+
+.spotify-object .add-track-button,
+.voting-object .add-track-button {
+  background-color: #51b0ea;
+  padding: 8px;
+  text-align: center;
+  border-radius: 0 0 2px 2px;
+  border-bottom: solid 3px #3897D2;
+  box-shadow: 0px 3px 4px rgba(37, 37, 37, 0.08);
+  
+  margin-top: 8px;
+  width: 40%;
+  float: right;
+  
+  cursor: pointer;
+}
+
+.spotify-object .add-track-button span,
+.voting-object .add-track-button span {
+  color: white;
+  font-family: 'Roboto';
+  text-transform: uppercase;
+  font-size: 11px;
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.15);
+}
+
+.spotify-object .add-track-button span:before,
+.spotify-object > .inner .cover:before,
+.voting-object .add-track-button span:before,
+.voting-object > .inner .cover:before {
+  content: '';
+  width: 10px;
+  height: 10px;
+  background-image: url('../images/icons/check/noun_20624.svg');
+  background-size: 9px 9px;
+  background-repeat: no-repeat;
+  display: inline-block;
+  margin-right: 6px;
+  background-position: center;
+  border-radius: 10px;
+  padding: 2px;
+  margin-bottom: -3px;
+}
+
+.spotify-object .add-track-button span:before,
+.spotify-object > .inner .cover:before {
+    background-color: rgba(0, 0, 0, 0.11);
+}
+
+.voting-object .add-track-button span:before,
+.voting-object > .inner .cover:before {
+    background-color: #3c9f3c;
+}
+
+.spotify-object > .inner .cover:before,
+.voting-object > .inner .cover:before {
+  width: 18px;
+  height: 18px;
+}
+
+.spotify-object .add-track-button.loading span:before,
+.voting-object .add-track-button.loading span:before {
+  content: '';
+  width: 10px;
+  height: 10px;
+  background-image: url('../images/icons/loading/white-on-blue-ajax-loader.gif');
+  background-size: contain;
+  background-repeat: no-repeat;
+  display: inline-block;
+  margin-right: 6px;
+  background-position: center;
+  background-color: transparent;
+}
+
+.voting-object.winning > .inner {
+  background-color: transparent;
+}
+
+.voting-object.winning .time-indicator {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 80%;
+  height: 100%;
+  background-color: #ffffff;
+}
+
+.voting-object.winning .time-indicator .bar {
+  background-color: rgba(47, 152, 47, 0.31);
+  width: 0;
+  height: 100%;
+  transition: width 0.2s;
+}

@@ -1,0 +1,126 @@
+<div class="index swap-page content">
+  <div class="inner">
+    <div class="logo initial">
+      <span><span class="au">au</span>x</span>
+    </div>
+    <div style="display:none;" class="logo final">
+      <span><span class="au">au</span>x</span>
+    </div>
+    <div class="buttons">
+      <a id="find-groups-button" href="/find">
+        <div class="button">
+          <span class="text">Find groups near me</span>
+        </div>
+      </a>
+      <a id="create-group-button" href="/create">
+        <div class="button">
+          <span class="text">Create a group</span>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <!--
+  <script type="text/javascript">
+      $('#find-groups-button').click(function(e) {
+          window.aux.swapper.slideIn($(this).attr('href'));
+          e.preventDefault();
+      });
+
+      $('#create-group-button').click(function(e) {
+          window.aux.swapper.slideIn($(this).attr('href'));
+          e.preventDefault();
+      });
+    
+    $(document).ready(function() {
+        var prefixes = ['webkit', 'moz', 'MS', 'o', ''];
+        var addPrefixedEventListener = function(elem, type, callback) {
+            for(var i = 0; i < prefixes.length; i++) {
+                if(prefixes[i] === '') {
+                    type = type.toLowerCase();
+                }
+                elem.addEventListener(prefixes[i] + type, callback);
+            }
+        };
+      
+        var setPrefixedStyle = function(elem, type, value) {
+            for(var i = 0; i < prefixes.length; i++) {
+                var prefix = prefixes[i];
+                if(prefix === '') {
+                   type[0] = type[0].toLowerCase();
+                }
+                elem.style[prefix + type] = value;
+            }
+        };
+
+        // background animation set-up
+        var colors = [
+            'rgb(255, 195, 65)',
+            'rgb(208, 221, 21)',
+            'rgb(255, 224, 65)',
+            'rgb(242, 130, 151)',
+            'rgb(65, 147, 255)',
+            'transparent',
+        ];
+          
+        // build array of background divs
+        var backgrounds = [];
+        for(var i = 0; i < colors.length; i++) {
+          var bkg = document.createElement('div');
+          bkg.style.backgroundColor = colors[i];
+          bkg.style.width = window.innerWidth + 'px';
+          bkg.style.height = (window.innerHeight + 11) + 'px';
+          bkg.style.zIndex = -(i+1);
+          bkg.style.position = 'absolute';
+          bkg.style.top = '0';
+          bkg.style.left = '0';
+          bkg.setAttribute('index', i);
+          
+          setPrefixedStyle(bkg, 'Transition', 'height 0.5s');
+          // bkg.style.webkitTransition = 'height 0.5s';
+          setPrefixedStyle(bkg, 'TransitionTimingFunction', 'ease-in');
+          // bkg.style.webkitTransitionTimingFunction = 'ease-in';
+          
+          addPrefixedEventListener(bkg, 'TransitionEnd', function() {
+            var nextIndex = parseInt(this.getAttribute('index')) + 1;
+            if(backgrounds.length > nextIndex + 1) { // use the color of
+                                                     // the last background
+              backgrounds[nextIndex].style.height = '0';
+            }
+          });
+          backgrounds.push(bkg);
+          document.body.appendChild(bkg);
+        }
+        
+        // logo animation set-up
+        var initialLogo = $('.initial.logo');
+        var finalLogo   = $('.final.logo');
+        var buttons     = $('.buttons');
+      
+        setPrefixedStyle(buttons[0], 'Transition', 'opacity 0.8s');
+      
+        addPrefixedEventListener(initialLogo[0], 'AnimationEnd', function() {
+            // remove the old logo and let the final logo fly in
+            $(this).remove();
+            finalLogo.addClass('slide-in').fadeIn();
+        });
+      
+        addPrefixedEventListener(finalLogo[0], 'AnimationEnd', function() {
+          // bring in the buttons  
+          buttons.css('opacity', 1);
+        });
+      
+        // kick off background transitions
+        var interval = setInterval(function() {
+          if(document.body.contains(backgrounds[0])) {
+            backgrounds[0].style.height = '0';
+            clearInterval(interval);
+          }
+        }, 100);
+      
+        // kick off logo animation
+        initialLogo.addClass('slide-out');
+    });
+  </script>
+  -->
+</div>

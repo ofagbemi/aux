@@ -1,0 +1,24 @@
+<style>
+.tracks, .artists {
+  padding: 0 11px;
+}
+.tracks > h1, .artists > h1 {
+  text-transform: uppercase;
+  font-family: Helvetica;
+  font-size: 14px;
+  margin-top: 11px;
+  font-weight: 200;
+}
+</style>
+<div class="search-results">
+  <div class="artists">
+    <h1>Artists</h1>
+    {{> spotify-object-list search_results.artists.items}}
+  </div>
+  
+  
+  <div class="tracks">
+    <h1>Tracks</h1>
+    {{> spotify-object-list search_results.tracks.items}}
+  </div>
+</div>

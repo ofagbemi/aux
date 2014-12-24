@@ -1,0 +1,69 @@
+<div>
+  <a href="/login">Log in to Spotify</a>
+</div>
+
+<div>
+  <h2>Create a group</h2>
+  <div>
+    <label>
+      Title
+      <input type="text">
+    </label>
+      
+    <div>
+      <a id="submit" href="javascript:void(0);">Submit</a>
+    </div>
+  </div>
+</div>
+
+<div id="groups">
+  <h2>Groups</h2>
+</div>
+
+<script type="text/javascript">
+  (function() {
+      var firebase = new Firebase('https://blinding-fire-3652.firebaseio.com/');
+      
+      firebase.child('groups').on('child_added', function(snapshot) {
+          var groupDiv = document.createElement('div');
+          var header   = document.createElement('h3');
+          header.innerHTML = snapshot.val().name;
+          groupDiv.appendChild(header)
+          
+          $('#groups').append($(groupDiv));
+      });
+      
+      document.getElementById('submit').onclick = function(e) {
+          var name = $('input[type="text"]').val();
+          var user_id = 'jiggauggers';
+          
+          if(navigator.geolocation) {
+              var sendDataAfterLocation = function(geo) {
+                  var data = {
+                      name: name,
+                      user_id: user_id,
+                      location: {
+                          latitude: geo.coords.latitude,
+                          longitude: geo.coords.longitude,
+                          accuracy: geo.coords.accuracy,
+                      },
+                  };
+                  
+                  $.ajax({
+                      type: 'POST',
+                      url: 'http://localhost:5000/create_group',
+                      data: JSON.stringify(data),
+                      public: false,
+                      contentType: 'application/json',
+                  }).done(function(response) {
+                      console.log(response);
+                  });
+              };
+              
+              navigator.geolocation.getCurrentPosition(sendDataAfterLocation);
+          } else {
+              alert('geolocation not enabled');
+          }
+      }
+  })();
+</script>

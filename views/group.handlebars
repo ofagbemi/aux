@@ -1,0 +1,41 @@
+<div group-id="{{ id }}" class="group swap-page content">
+  <header>
+    <h2>{{ name }}</h2>
+  </header>
+  <div class="window-select">
+    <div class="time-indicator">
+      <div class="bar"></div>
+    </div>
+    <div class="buttons">
+      <div for="listen" class="listen button active"><span>listen</span></div>
+      <div for="add" class="add button"><span>add</span></div>
+      <div for="vote" class="vote button"><span>vote</span></div>
+    </div>
+    <div class="pointer"></div>
+  </div>
+  
+  <section class="listen active">
+    <p style="background-color:white;padding:11px;">This is a cool section with lots of cool things for listening to cool songs and all that other cool stuff yeah yeah.</p>
+  </section>
+  <section class="add" style="display:none">
+    <div class="search-wrapper">
+      <label for="search"></label>
+      <input id="search" type="text" placeholder="Search for songs to add">
+    </div>
+    <div class="loading-icon" style="display:none;"></div>
+    <div id="search-results">
+    </div>
+    <div>
+      {{ songs }}
+    </div>
+  </section>
+  <section class="vote" style="display:none;">
+    <div class="vote-wrapper">
+      <div class="loading-icon"></div>
+      <div id="voting-tracks">
+        {{> voting-results this}}
+      </div>
+    </div>
+  </section>
+  <script type="text/javascript" src="/public/js/group.js"></script>
+</div>

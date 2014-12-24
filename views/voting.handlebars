@@ -1,0 +1,33 @@
+<div group-id="{{ id }}" class="voting swap-page content">
+  {{#each tracks}}
+    {{> voting-object this}}
+  {{/each}}
+
+
+  <script>
+  $(document).ready(function() {
+      var votingFns = {
+          voteButtonClickFn: function(e) {
+              var groupId = $(this).parents('.voting.content').attr('group-id');
+              var trackId = $(this).parents('.track').attr('track-id');
+              var button  = $(this);
+              console.log(trackId);
+              $.ajax({
+                  type: 'POST',
+                  url: '/vote',
+                  data: {
+                      group_id: groupId,
+                      track_id: trackId,
+                  },
+              }).done(function(response) {
+                  button.addClass('voted');
+              });
+              e.preventDefault();
+          },
+      };
+    
+      $('.vote-button').click(votingFns.voteButtonClickFn);
+  });
+  
+  </script>
+</div>

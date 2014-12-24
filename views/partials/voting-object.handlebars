@@ -1,0 +1,49 @@
+<!--<div class="track {{#if voted}}voted{{/if}}" track-id="{{ id }}">
+  <h2>{{ name }}</h2>
+  <span>Votes: {{ voter_ids.length }}</span>
+  <div class="vote-button">Vote</div>
+</div>-->
+
+<div track-id="{{ id }}" class="voting-object {{#ifCond type '===' 'track'}}track{{else}}{{#ifCond type '===' 'artist'}}artist{{else}}album{{/ifCond}}{{/ifCond}}">
+  <div class="time-indicator">
+    <div class="bar"></div>
+  </div>
+  <div class="inner">
+    <div class="icon circle pop-in" style="
+      {{#equal type 'track' }}
+        {{#if album.images.[0].url}}
+        background-image: url('{{ album.images.[0].url }}');
+        {{else}}
+        background-image: url('/no-img');
+        {{/if}}
+      {{else}}
+        {{#if images.[0].url}}
+        background-image: url('{{ images.[0].url }}');
+        {{else}}
+        background-image: url('/no-img');
+        {{/if}}
+      {{/equal}}">
+    </div>
+
+    <div class="copy">
+      <div class="header">
+        <h2>{{ name }}</h2>
+      </div>
+      <div class="body">
+       {{#ifCond type '===' 'artist' }}
+            <span class="description">Artist</span>
+          {{/ifCond}}
+          {{#ifCond type '===' 'album' }}
+            <span class="description">Album by <a href=""> {{ artist.[0].name }}</a></span>
+          {{/ifCond}}
+          {{#ifCond type '===' 'track' }}
+            <span class="description">Track by <a href=""> {{ artists.[0].name }}</a></span>
+          {{/ifCond}}
+      </div>
+    </div>
+    <div class="votes-indicator"><div class="bar"></div></div>
+  </div>
+  <div class="vote-button{{#if voted_for}} active{{/if}}" track-id="{{ id }}">
+    <span class="num-votes">{{ num_votes }}</span>
+  </div>
+</div>
