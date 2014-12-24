@@ -1,3 +1,36 @@
+@mixin animation($str) {
+  -webkit-animation: #{$str};
+     -moz-animation: #{$str};
+      -ms-animation: #{$str};
+       -o-animation: #{$str};
+          animation: #{$str};      
+}
+
+@mixin animation-timing-function($str) {
+  -webkit-animation-timing-function: #{$str};
+     -moz-animation-timing-function: #{$str};
+      -ms-animation-timing-function: #{$str};
+       -o-animation-timing-function: #{$str};
+          animation-timing-function: #{$str};
+}
+
+@mixin border-radius($str) {
+  -webkit-border-radius: #{$str};
+     -moz-border-radius: #{$str};
+          border-radius: #{$str};
+}
+
+@mixin box-shadow($str) {
+  -webkit-box-shadow: #{$str};
+     -moz-box-shadow: #{$str};
+          box-shadow: #{$str};
+}
+
+@mixin filter($str) {
+  -webkit-filter: #{$str};
+          filter: #{$str};
+}
+
 @mixin keyframes($animation-name) {
   @-webkit-keyframes $animation-name {
     @content;
@@ -16,28 +49,19 @@
   }
 }
 
-@mixin animation($str) {
-  -webkit-animation: #{$str};
-     -moz-animation: #{$str};
-      -ms-animation: #{$str};
-       -o-animation: #{$str};
-          animation: #{$str};      
-}
-
-@mixin animation-timing-function($str) {
-  -webkit-animation-timing-function: #{$str};
-     -moz-animation-timing-function: #{$str};
-      -ms-animation-timing-function: #{$str};
-       -o-animation-timing-function: #{$str};
-          animation-timing-function: #{$str};
-}
-
 @mixin transform($str) {
   -webkit-transform: $str;
 	 -moz-transform: $str;
       -ms-transform: $str;
 	   -o-transform: $str;
           transform: $str;
+}
+
+@mixin transition($str) {
+  -webkit-transform: #{$str};
+     -moz-transform: #{$str};
+       -o-transform: #{$str};
+          transform: #{$str};
 }
 
 @mixin translate($x, $y) {

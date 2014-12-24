@@ -8,9 +8,9 @@
   background-size: auto 150%;
   background-position: 0 center;
   z-index: -10;
-  -webkit-filter: brightness(0.76) blur(24px) grayscale(0.4);
   
-  transition: background 0.8s;
+  @include filter(brightness(0.76) blur(24px) grayscale(0.4));
+  @include transition(background 0.8s);
 }
 
 header {
@@ -52,17 +52,18 @@ header h2 {
   box-sizing: border-box;
   outline: none;
   border: solid 1px rgba(255,255,255,0.68);
-  border-radius: 2px;
   background: none;
   color: white;
-  box-shadow: 0 0 19px rgba(0, 0, 0, 0.38);
   
   font-family: 'Helvetica', 'Arial', sans-serif;
   font-weight: 200;
   font-size: 14px;
   
   opacity: 0.44;
-  transition: opacity 0.4s;
+  
+  @include border-radius(2px);
+  @include box-shadow(0 0 19px rgba(0, 0, 0, 0.38));
+  @include transition(opacity 0.4s);
 }
 
 #search:focus {
@@ -84,8 +85,9 @@ header h2 {
   height: 40px;
   /* background-color: #388dca; */
   position: relative;
-  box-shadow: inset 0 4px 4px rgba(95, 95, 95, 0.01);
   text-align: center;
+  
+  @include box-shadow(inset 0 4px 4px rgba(95, 95, 95, 0.01));
 }
 
 .window-select .time-indicator {
@@ -100,9 +102,9 @@ header h2 {
   width: 0;
   /* height: 100%; */
   background-color: #51be51;
-  box-shadow: inset 0px -2px rgba(42, 42, 42, 0.08);
   
-  transition: width 0.2s;
+  @include box-shadow(inset 0px -2px rgba(42, 42, 42, 0.08));
+  @include transition(width 0.2s);
 }
 
 .window-select .buttons {
@@ -121,7 +123,7 @@ header h2 {
   
   /* to position the buttons above the timer bar behind it */
   position: relative;
-  transition: opacity 0.4s;
+  @include transition(opacity 0.4s);
 }
 
 .window-select .button:not(.active) {
@@ -177,7 +179,7 @@ header h2 {
   border-width: 0 5px 5px;
 
   display: none;
-  transition: left 0.7s;
+  @include transition(left 0.7s);
 }
 
 section {
