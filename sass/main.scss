@@ -1,10 +1,5 @@
 @import 'mixins';
 @import 'fonts';
-@import 'animation_classes';
-
-@import 'group';
-@import 'spotify_object';
-@import 'voting_tracks';
 
 $logo-font-stack: 'Open Sans', 'Helvetica Neue', sans-serif;
 $font-stack: 'Helvetica Neue', sans-serif;
@@ -41,3 +36,8 @@ h1, h2 {
   align-items: center;
   justify-content: center;
 }
+
+@import 'animation_classes';
+@import 'group';
+@import 'spotify_object';
+@import 'voting_tracks';
