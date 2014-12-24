@@ -24,6 +24,14 @@
           animation: #{$str};      
 }
 
+@mixin animation-timing-function($str) {
+  -webkit-animation-timing-function: #{$str};
+     -moz-animation-timing-function: #{$str};
+      -ms-animation-timing-function: #{$str};
+       -o-animation-timing-function: #{$str};
+          animation-timing-function: #{$str};
+}
+
 @mixin transform($str) {
   -webkit-transform: $str;
 	 -moz-transform: $str;
