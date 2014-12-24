@@ -204,21 +204,20 @@ $(document).ready(function() {
             var html = result.html,
                 addTrackButtonHtml = '' +
                   '<div class="add-track-button">' +
-                    '<span>Add this track</span>' +
+                    '<span>add</span>' +
                   '</div>' +
                   '<div class="clear"></div>';
             
-            // Hide the loading indicators once we're almost ready to
-            // render the result
+            // Hide the loading indicators once we've rendered
+            // the result
             loadingIcon.hide();
-            searchResultsWrapper.show();
+            searchResultsWrapper.html(html).show();
             
-            var trackElems = searchResultsWrapper
-                .html(html) // render the html here
-                .find('.track');
+            var innerTrackElems = searchResultsWrapper.find('.track .inner');
             $(addTrackButtonHtml)
                 .click(groupFns.submitForVotingClickFn)
-                .appendTo(trackElems);
+                .appendTo(innerTrackElems)
+            
 
             var tracks = result.tracks.items;
             for(var i = 0; i < tracks.length; i++) {

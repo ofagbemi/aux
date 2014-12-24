@@ -8,12 +8,11 @@
 .spotify-object > .inner,
 .voting-object > .inner {
   position: relative;
-  padding: 11px;
-  display: flex;
-  flex-wrap: nowrap;
-  background-color: white;
-  box-shadow: 0 0 4px rgba(124, 124, 124, 0.1);
+  background-color: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 11px rgba(0, 0, 0, 0.47);
   box-sizing: border-box;
+  border-radius: 4px;
+  text-align: center;
 }
 
 .voting-object {
@@ -97,27 +96,31 @@
 
 .spotify-object .icon,
 .voting-object .icon {
-  width: 50px;
-  min-width: 50px;
-  height: 50px;
-  border-radius: 50px;
+  display: block;
+  width: 105%;
+  margin-left: -2.5%;
+  /* height: 337px; */
   background-size: cover;
   background-repeat: no-repeat;
   display: inline-block;
+  box-shadow: 4px 0 14px rgba(0, 0, 0, 0.52);
+  border-radius: 4px;
 }
 
 .spotify-object .copy,
 .voting-object .copy {
-  display: inline-block;
-  margin-left: 11px;
-  font-family: 'Helvetica Neue';
-  margin-right: 35px;
+  display: block;
+  font-family: 'Helvetica Neue', 'Arial', sans-serif;
+  text-align: center;
+  padding-top: 18px;
 }
 
 .spotify-object .copy .header h2,
 .voting-object .copy .header h2 {
-  font-weight: 500;
-  font-size: 12px;
+  color: black;
+  font-weight: 300;
+  font-size: 25px;
+  padding-bottom: 11px;
 }
 
 .spotify-object .copy .body,
@@ -128,35 +131,38 @@
 .spotify-object .copy .body .description,
 .voting-object .copy .body .description {
   font-weight: 200;
-  color: #777;
+  color: #3d3d3d;
   font-size: 11px;
+}
+
+.spotify-object .copy .body .description a,
+.voting-object .copy .body .description a {
+  color: inherit;
+  font-weight: 400;
 }
 
 .spotify-object .add-track-button,
 .voting-object .add-track-button {
-  background-color: #51b0ea;
-  padding: 8px;
+  display: inline-block;
+  background: rgba(110, 110, 110, 0.09);
+  color: rgb(68, 68, 68);
   text-align: center;
-  border-radius: 0 0 2px 2px;
-  border-bottom: solid 3px #3897D2;
-  box-shadow: 0px 3px 4px rgba(37, 37, 37, 0.08);
-  
-  margin-top: 8px;
-  width: 40%;
-  float: right;
+  font-family: Helvetica;
+  box-sizing: border-box;
+  font-weight: 200;
+  text-transform: uppercase;
+  border-top: solid 1px rgba(165, 165, 165, 0.33);
+  display: inline-block;
+  width: 64px;
+  height: 64px;
+  border-radius: 64px;
+  line-height: 62px;
+  margin: 18px 0;
   
   cursor: pointer;
 }
 
-.spotify-object .add-track-button span,
-.voting-object .add-track-button span {
-  color: white;
-  font-family: 'Roboto';
-  text-transform: uppercase;
-  font-size: 11px;
-  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.15);
-}
-
+/*
 .spotify-object .add-track-button span:before,
 .spotify-object > .inner .cover:before,
 .voting-object .add-track-button span:before,
@@ -174,11 +180,13 @@
   padding: 2px;
   margin-bottom: -3px;
 }
+*/
 
 .spotify-object .add-track-button span:before,
 .spotify-object > .inner .cover:before {
     background-color: rgba(0, 0, 0, 0.11);
 }
+
 
 .voting-object .add-track-button span:before,
 .voting-object > .inner .cover:before {
