@@ -21,15 +21,16 @@
 }
 
 .voting-object {
-  display: flex;
-  flex-wrap: nowrap;
   position: relative;
+  @include display(flex);
+  @include flex-wrap(nowrap);
 }
 
 .voting-object > .inner {
-  display: inline-flex;
   width: 80%;
   position: relative;
+  
+  @include display(inline-flex);
 }
 
 .voting-object > .inner .votes-indicator {
@@ -55,10 +56,11 @@
   width: 20%;
   box-sizing: border-box;
   padding: 11px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   background-color: rgb(197, 83, 96);
+  
+  @include display(inline-flex);
+  @include align-items(center);
+  @include justify-content(center);
   
   @include border-radius(0 4px 4px 0);
   @include box-shadow(inset 0px -3px rgb(129, 35, 71));
@@ -94,9 +96,9 @@
   z-index: 0;
   overflow: hidden;
   
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  @include display(flex);
+  @include justify-content(center);
+  @include align-items(center);
   
   @include transition(width 0.8s);
 }

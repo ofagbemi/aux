@@ -32,9 +32,9 @@ h1, h2 {
 }
 
 .index.content {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  @include display(flex);
+  @include align-items(center);
+  @include justify-content(center);
 }
 
 @import 'animation_classes';

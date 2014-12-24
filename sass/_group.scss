@@ -116,13 +116,14 @@ header h2 {
   top: 0;
   height: 40px;
   width: 70px;
-  display: inline-flex;
-  flex-wrap: nowrap;
-  justify-content: center;
   cursor: pointer;
   
   /* to position the buttons above the timer bar behind it */
   position: relative;
+  
+  @include display(inline-flex);
+  @include flex-wrap(nowrap);
+  @include justify-content(center);
   @include transition(opacity 0.4s);
 }
 
