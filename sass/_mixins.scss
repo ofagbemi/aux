@@ -58,10 +58,10 @@
 }
 
 @mixin transition($str) {
-  -webkit-transform: #{$str};
-     -moz-transform: #{$str};
-       -o-transform: #{$str};
-          transform: #{$str};
+  -webkit-transition: #{$str};
+     -moz-transition: #{$str};
+       -o-transition: #{$str};
+          transition: #{$str};
 }
 
 @mixin translate($x, $y) {
