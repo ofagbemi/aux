@@ -374,13 +374,10 @@ $(document).ready(function() {
             
             // Start by prepping the next element's card
             // Set the transform property on its album artwork
-            nextArtworkElem.velocity({
-                translateX: directionScalar * (-window.innerWidth/2),
-                translateY: '11px',
-                rotateZ: (-directionScalar * 11) + 'deg',
-            }, {
-                duration: 0,
-            });
+            var transform = 'translateX(' + (-directionScalar * window.innerWidth/2) + 'px) ' +
+                            'translateY(11px) ' + 
+                            'rotate(' + (-directionScalar * 11) + 'deg)';
+            util.setPrefixedStyle(nextArtworkElem[0], 'transform', transform);
             
             // Hide its copy
             nextElemInner.find('.copy').css({
