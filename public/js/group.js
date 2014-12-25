@@ -107,6 +107,7 @@ $(document).ready(function() {
                 $(that).removeClass('loading');
                 groupFns.submitForVotingAnimationFn(trackElem, function() {
                     $('.window-select .vote.button').click();
+                    groupFns.clearSearch();
                 });
             });
             e.preventDefault();
@@ -361,7 +362,7 @@ $(document).ready(function() {
                 }, {
                     delay: 200,
                     easing: 'spring',
-                    duration: 200,
+                    duration: 400,
                     complete: function() {
                         // done swiping
                         groupFns.private.swiping = false;
@@ -526,6 +527,11 @@ $(document).ready(function() {
             });
         }, 800);
     });
+    
+    // Clears the search page
+    groupFns.clearSearch = function() {
+        $('#search').val('').keyup();
+    };
     
     /* voting */
     var numTotalVotes = 0,
