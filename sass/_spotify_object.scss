@@ -121,14 +121,15 @@
   display: block;
   font-family: 'Helvetica Neue', 'Arial', sans-serif;
   text-align: center;
-  padding-top: 18px;
+  padding: 18px;
+  padding-bottom: 0;
 }
 
 .spotify-object .copy .header h2,
 .voting-object .copy .header h2 {
   color: black;
   font-weight: 300;
-  font-size: 25px;
+  font-size: 21px;
   padding-bottom: 11px;
 }
 
