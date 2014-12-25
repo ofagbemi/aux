@@ -53,7 +53,7 @@
                 if(p[i] !== '') {
                     prefix = '-' + prefix + '-';
                 }
-                elem.style[prefix + type] = value;
+                elem.style[prefix + property] = value;
             }
         },
     };
