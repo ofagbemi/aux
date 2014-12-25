@@ -9,8 +9,8 @@
   background-position: 0 center;
   z-index: -10;
   
-  @include filter(brightness(0.76) blur(24px) grayscale(0.4));
-  @include transition(background 0.8s);
+  @include filter(brightness(0.36) blur(8px) grayscale(0.4));
+  @include transition( (background 0.8s, opacity 1.8s) );
 }
 
 header {
