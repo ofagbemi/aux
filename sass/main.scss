@@ -38,6 +38,7 @@ h1, h2 {
   @include justify-content(center);
 }
 
+@import '_search_results';
 @import 'animation_classes';
 @import 'group';
 @import 'spotify_object';

@@ -1,0 +1,45 @@
+.search-results {
+  margin-bottom: 24px;
+}
+
+.tracks, .artists {
+  padding: 0 56px;
+}
+.tracks > h1, .artists > h1 {
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-family: 'Helvetica';
+  font-size: 14px;
+  margin: 28px 0 14px 0;
+  font-weight: 200;
+  color: rgba(255, 255, 255, 0.92);
+  text-shadow: 0px 2px 6px rgba(0, 0, 0, 0.5);
+  text-align: center;
+}
+  
+.tracks > h1 .track-num {
+  color: white;
+  font-weight: 500;
+  font-size: 18px;
+}
+
+.tracks > .track-indicators {
+  margin-top: 14px;
+  text-align: center;
+}
+
+.tracks > .track-indicators .track-indicator {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 9px;
+  margin-right: 8px;
+  background-color: white;
+  opacity: 0.36;
+  
+  transition: opacity 0.4s;
+}
+
+.tracks > .track-indicators .track-indicator.active {
+  opacity: 1;
+}
