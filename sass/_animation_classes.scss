@@ -21,6 +21,11 @@
   @include animation(slide-out-right-anim 1s);
 }
 
+.move-background-vertical {
+  @include animation-timing-function('ease-out');
+  @include animation(move-background-vertical-anim 18s infinite);
+}
+
 $time: 1, 2, 3, 4;
 
 @each $i in $time {

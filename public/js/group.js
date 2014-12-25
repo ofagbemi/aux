@@ -107,6 +107,7 @@ $(document).ready(function() {
                 $(that).removeClass('loading');
                 groupFns.submitForVotingAnimationFn(trackElem, function() {
                     $('.window-select .vote.button').click();
+                    groupFns.clearSearch();
                 });
             });
             e.preventDefault();
@@ -123,57 +124,287 @@ $(document).ready(function() {
          */
         submitForVotingAnimationFn: function(elem, callback) {
             elem = $(elem);
-            var addTrackButton = elem.find('.add-track-button');
-            var cover = $('<div/>').addClass('cover');
-            var inner = elem.find('.inner').append(cover);
             
-          
-            addTrackButton.css({
-                height: addTrackButton.height() + 'px',
-                overflow: 'hidden',
-                whiteSpace: 'nowrap',
-            }).animate({
-                width: 0,
-                paddingLeft: 0,
-                paddingRight: 0,
-            }, function() {
-                addTrackButton.animate({
-                    height: 0,
-                    paddingTop: 0,
-                    paddingBottom: 0,
-                }, function() {
-                    addTrackButton.remove();
+            var inner = elem.find('.inner'),
+                image = inner.find('.icon');
+            
+            image.velocity({
+                marginTop: '25%',
+            }, {
+                duration: 400,
+            }).velocity({
+                marginTop: '-280%',
+                opacity: 0.4,
+            }, {
+                delay: 200,
+                duration: 400,
+                complete: callback
+            });
+        },
+        
+        /**
+         * Sets a transition on the window's background image and animates
+         * a shift from whatever it is now to the background image attribute
+         * that's passed in
+         *
+         * @param string backgroundImage The background-image value to set the background to
+         */
+        setBackground: function(backgroundImage) {
+            var backgroundElem = $('.group.swap-page > .background')
+            var setBackground = function() {
+                util.removePrefixedEventListener(
+                    backgroundElem[0], 'TransitionEnd', setBackground);
+                backgroundElem.css({
+                    backgroundImage: backgroundImage,
+                    opacity: 1,
                 });
+            };
+            util.addPrefixedEventListener(backgroundElem[0], 'TransitionEnd', setBackground);
+            backgroundElem.css('opacity', 0);
+        },
+        
+        /**
+         * Resets transforms on passed in element added by pan and swipe
+         * functions
+         *
+         * @param hammerEvent Hammer event object
+         * @param HtmlElem elem Element to reset
+         */
+        resetSearchResultPosition: function(hammerEvent, elem) {
+            // We prevent reset calls from being made in rapid succession
+            // For example, when a pan across the threshold leads quickly
+            // into a swipe event past the boundry, it can be hard to prevent
+            // the reset from being called twice
+            var time = new Date();
+            if(groupFns.private.lastReset &&
+               time - groupFns.private.lastReset < 400) {
+                return;
+            }
+            groupFns.private.lastReset = time;
+            
+            elem = $(elem);
+            // Is 1 if the event is toward the right and -1 otherwise
+            var directionScalar = hammerEvent.deltaX > 0 ? 1 : -1;
+            if(groupFns.private.swipeLocation) {
+                // send to the location it was last at before animating
+                // the next translation
+                elem.velocity(
+                    groupFns.private.swipeLocation, {
+                        duration: 0,
+                    }
+                );
+            }
+            
+            // Animate the bounce back to the album artwork's original
+            // position
+            elem.velocity({
+                translateZ: '0',
+                translateX: (-directionScalar * 11) + 'px',
+                translateY: '2px',
+                rotateZ: (-directionScalar * 2) + 'deg',
+                opacity: 1,
+            }, {
+                easing: 'spring',
+            }).velocity({
+                translateX: '0px',
+                translateY: '0px',
+                rotateZ: '0deg'
+            }, {
+                easing: 'spring',
+            });
+        },
+        
+        /**
+         * Transforms an element as it's being panned to animate it's motion
+         * and slides into the next search result if the element moves past
+         * an internally defined threshold
+         *
+         * @param hammerEvent Hammer event object passed to pan function
+         * @param HtmlElement elem Element to slide around
+         */
+        panSearchResult: function(hammerEvent, elem) {
+            elem = $(elem);
+            var threshold = window.innerWidth / 2.5;
+            
+            // If the user stops here, we can either get rid of our
+            // transformations or, if we've reached our threshold,
+            // swipe into the next element
+            if(hammerEvent.isFinal) {
+                if(Math.abs(hammerEvent.deltaX) >= threshold) {
+                    groupFns.swipeSearchResult(hammerEvent, elem);
+                } else {
+                    groupFns.resetSearchResultPosition(hammerEvent, elem);
+                }
+            } else {
+                var rotation = 11 * hammerEvent.deltaX/threshold,
+                    translateY = Math.abs(rotation),
+                    opacity = 1 - Math.abs((hammerEvent.deltaX/threshold)/8);
+                
+                // Set the transforms on the album artwork
+                var transform = 'translateX(' + hammerEvent.deltaX + 'px) ' +
+                                'translateY(' +  translateY + 'px) ' +
+                                'rotate(' + rotation + 'deg)';
+                util.setPrefixedStyle(elem[0], 'transform', transform);
+                elem[0].style.opacity = opacity;
+                
+                // Update the current swipe location
+                groupFns.private.swipeLocation = {
+                    translateX: hammerEvent.deltaX,
+                    translateY: translateY,
+                    rotateZ: rotation,
+                    opacity: opacity,
+                };
+            }
+        },
+        
+        private: {
+            swiping: false,
+            swipeLocation: undefined,
+            lastSwipe: undefined,
+            lastReset: undefined,
+        },
+        
+        /**
+         * Moves the passed in artwork element to the left and brings in
+         * the next search result's card and artwork
+         *
+         * @param hammerEvent Hammer event object passed to swipe or pan
+         *                    function
+         * @param HtmlElement artworkElem Artwork element for the swiped search
+         *                                result
+         */
+        swipeSearchResult: function(hammerEvent, artworkElem) {
+            // TODO: maybe queue up swipes
+            if(groupFns.private.swiping) {
+                return;
+            }
+            
+            // If this isn't a final event, then there's not really any
+            // reason to fulfill this--the threshold check will send us
+            // back here anyway
+            if(!hammerEvent.isFinal) {
+                return;
+            }
+            
+            artworkElem = $(artworkElem);
+            // Is 1 if the event was toward the right and -1 otherwise
+            var directionScalar = hammerEvent.deltaX > 0 ? 1 : -1,
+                elemInner = artworkElem.parents('.inner'),
+                slideOrder = artworkElem.attr('slide-order'),
+                elemSpotifyObject = elemInner.parents('.spotify-object'),
+                nextSlideOrder = parseInt(slideOrder) + (-directionScalar),
+                nextArtworkElem = $('.inner .icon[slide-order="' + nextSlideOrder + '"');
+            
+            // Record the last swipe here to prevent the swipe of the same
+            // search result from being called to soon after the last time
+            // it was called
+            if(groupFns.private.lastSwipe) {
+                if(groupFns.private.lastSwipe.slideOrder === slideOrder &&
+                   new Date() - groupFns.private.lastSwipe.time < 400) {
+                    return;
+                }
+            }
+            groupFns.private.lastSwipe = {
+                time: new Date(),
+                slideOrder: slideOrder,
+            };
+            
+            // Make note of the fact that the swipe event is currently
+            // being handled
+            groupFns.private.swiping = true;
+            
+            // In case we're trying to slide past the last search result
+            if(nextArtworkElem.length === 0) {
+                groupFns.resetSearchResultPosition(hammerEvent, artworkElem);
+                groupFns.private.swiping = false;
+                return;
+            }
+            
+            var nextElemInner = nextArtworkElem.parents('.inner'),
+                nextElemSpotifyObject = nextElemInner.parents('.spotify-object');
+            
+            // First, if we're moving off of a swipe, we'll need to set the
+            // artwork's initial position to the position it was swiped to
+            if(groupFns.private.swipeLocation) {
+                artworkElem.velocity(groupFns.private.swipeLocation, {
+                    duration: 0,
+                });
+            }
+            
+            // Animating the artwork
+            artworkElem.velocity({
+                translateX: (directionScalar * window.innerWidth) + 'px',
+                translateY: '11px',
+                rotateZ: (directionScalar * 11) + 'deg',
+                opacity: 0,
             });
             
-            util.addPrefixedEventListener(cover[0], 'TransitionEnd', function() {
-                setTimeout(function() {
-                    var h = elem.height() + 'px'
-                    elem.css({
-                        overflow: 'hidden',
-                        height: h,
-                    });
-                    cover.css({
-                        height: h,
-                    });
-                    elem.animate({
-                        width: 0,
-                        paddingLeft: 0,
-                        paddingRight: 0,
-                    }, function() {
-                        elem.slideUp(400, function() {
-                            elem.remove();
-                            if(callback) {
-                                callback();
-                            }
-                        });
-                    });
-                }, 400);
+            // Called when it's time to show the next element
+            var showNextElement = function() {
+                nextElemSpotifyObject.show();
+                // Animate the next element's copy
+                nextElemInner.find('.copy').velocity({
+                    opacity: 1,
+                });
+                
+                // Before the element is displayed, we'll start transitioning
+                // into the new background artwork and to the next track
+                // indicator
+                groupFns.setBackground(nextArtworkElem.css('background-image'));
+                groupFns.setTrackNumDisplay(nextSlideOrder);
+                
+                // And animate the next element's album artwork
+                nextArtworkElem.velocity({
+                    translateX: '0px',
+                    translateY: '0px',
+                    rotateZ: '0deg',
+                    opacity: 1,
+                }, {
+                    delay: 200,
+                    easing: 'spring',
+                    duration: 400,
+                    complete: function() {
+                        // done swiping
+                        groupFns.private.swiping = false;
+                    },
+                });
+            };
+            
+            // Now we'll animate the inner element's content. We'll fade out the copy
+            // and slide it up before quickly replacing it with the other card
+            
+            // Start by prepping the next element's card
+            // Set the transform property on its album artwork
+            var transform = 'translateX(' + (-directionScalar * window.innerWidth/2) + 'px) ' +
+                            'translateY(11px) ' + 
+                            'rotate(' + (-directionScalar * 11) + 'deg)';
+            util.setPrefixedStyle(nextArtworkElem[0], 'transform', transform);
+            
+            // Hide its copy
+            nextElemInner.find('.copy').css({
+                opacity: 0,
             });
             
-            cover.css({
-                width: '100%',
+            // Then animate the current element's card, hide it,
+            // and show the next card
+            elemInner.find('.copy').velocity({
+                opacity: 0
+            }, {
+                complete: function() {
+                    elemSpotifyObject.hide();
+                    showNextElement();
+                },
             });
+        },
+      
+        setTrackNumDisplay: function(slideOrder) {
+            var trackIndicators = $('.track-indicators');
+            trackIndicators.find('.active').removeClass('active');
+            trackIndicators.find(
+                '.track-indicator[slide-order="' + slideOrder + '"]'
+            ).addClass('active');
+            
+            $('.track-num').text(parseInt(slideOrder) + 1);
         },
     };
 
@@ -181,52 +412,126 @@ $(document).ready(function() {
      * Makes the AJAX call for spotify search results and renders them
      * when they're received.
      */
+    var previousSearch = '';
     $('#search').keyup(function(e) {
-        var searchCall = new Date(),
-            loadingIcon = $('.add .loading-icon').show(),
+        var query = $(this).val();
+        if(query === '') {
+            $('.search-results').html('');
+            return;
+        } else if(query === previousSearch) {
+            return;
+        }
+        
+        previousSearch = query;
+        var loadingIcon = $('.add .loading-icon').show(),
             searchResultsWrapper = $('#search-results').hide(),
             that = this;
-        $.ajax({
-            type: 'GET',
-            url: '/search',
-            data: {
-                q: $(this).val(),
-                html: true,
-                json: true,
-            },
-        }).done(function(result) {
-            // If these aren't results for the query that's
-            // currently being searched for, exit here
-            if($(that).val() !== result.q) {return;}
-            
-            // TODO: render no results message when nothing is found
-            if(result.length === 0) {}
-            var html = result.html,
-                addTrackButtonHtml = '' +
-                  '<div class="add-track-button">' +
-                    '<span>Add this track</span>' +
-                  '</div>' +
-                  '<div class="clear"></div>';
-            
-            // Hide the loading indicators once we're almost ready to
-            // render the result
-            loadingIcon.hide();
-            searchResultsWrapper.show();
-            
-            var trackElems = searchResultsWrapper
-                .html(html) // render the html here
-                .find('.track');
-            $(addTrackButtonHtml)
-                .click(groupFns.submitForVotingClickFn)
-                .appendTo(trackElems);
-
-            var tracks = result.tracks.items;
-            for(var i = 0; i < tracks.length; i++) {
-                var id = tracks[i].id;
-                loadedTracks[id] = tracks[i];
+        
+        setTimeout(function() {
+            // If the query's changed in the time between when it was typed
+            // and now, don't bother sending the request
+            if(query !== $(that).val()) {
+                return;
             }
-        });
+            
+            $.ajax({
+                type: 'GET',
+                url: '/search',
+                data: {
+                    q: query,
+                    html: true,
+                    json: true,
+                },
+            }).done(function(result) {
+                // If these aren't results for the query that's
+                // currently being searched for, exit here
+                if($(that).val() !== result.q) {return;}
+
+                // TODO: render no results message when nothing is found
+                if(result.length === 0) {
+                    return;
+                }
+
+                var html = result.html,
+                    addTrackButtonHtml = '' +
+                      '<div class="add-track-button">' +
+                        '<span>add</span>' +
+                      '</div>' +
+                      '<div class="clear"></div>';
+
+                // Hide the loading indicators once we've rendered
+                // the result
+                loadingIcon.hide();
+                searchResultsWrapper.html(html).show();
+
+                var trackElems = searchResultsWrapper.find('.track');
+
+                // Make the first search result visible
+                var firstResultElem = trackElems.first().addClass('active');
+
+                // Set the background to this element's background
+                // image
+                var backgroundImage = firstResultElem.find('.inner .icon')
+                        .css('background-image');
+                groupFns.setBackground(backgroundImage);
+
+                var innerTrackElems = trackElems
+                    .find('.inner');
+              
+                // Set the height on the artwork so that it forms a
+                // square
+                innerTrackElems
+                    .find('.icon')
+                    .css('height', innerTrackElems.find('.icon').width())
+                    .each(function(i) {
+                    var elem = $(this).attr('slide-order', i);
+                    var hammer = new Hammer(elem[0]);
+                    
+                    hammer.on('swipe', function(event) {
+                        groupFns.swipeSearchResult(event, elem);
+                    });
+                    
+                    hammer.on('pan', function(event) {
+                        groupFns.panSearchResult(event, elem);
+                    });
+                    
+                    elem.on('mousedown', function(e) {
+                        e.preventDefault();
+                    });
+                });
+                
+                $(addTrackButtonHtml)
+                    .click(groupFns.submitForVotingClickFn)
+                    .appendTo(innerTrackElems)
+
+                // Add track slide indicators
+                var trackIndicatorHtml = '<div class="track-indicator"></div>';
+                var trackIndicatorWrapperElem = $('.track-indicators');
+                for(var i = 0; i < trackElems.length; i++) {
+                    $(trackIndicatorHtml)
+                        .attr('slide-order', i)
+                        .appendTo(trackIndicatorWrapperElem);
+                }
+              
+                var firstResultSlideOrder = firstResultElem.find('.inner .icon').attr('slide-order');
+                groupFns.setTrackNumDisplay(firstResultSlideOrder);
+                
+                // Update the displayed number of results
+                $('.search-results .num-tracks').text(trackElems.length);
+                
+                var tracks = result.tracks.items;
+                for(var i = 0; i < tracks.length; i++) {
+                    var id = tracks[i].id;
+                    loadedTracks[id] = tracks[i];
+                }
+            });
+        }, 800);
     });
+    
+    // Clears the search page
+    groupFns.clearSearch = function() {
+        $('#search').val('').keyup();
+    };
     
     /* voting */
     var numTotalVotes = 0,

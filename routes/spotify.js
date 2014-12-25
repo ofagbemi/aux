@@ -184,7 +184,8 @@ var search = function(params, callback) {
     request.get(options, function(err, response, body) {
         // if the response code is 401, we can try refreshing the
         // access token
-        if(response.statusCode === 401 && !params.req.session.failedTokenRefresh) {
+        if(response && response.statusCode === 401 &&
+           !params.req.session.failedTokenRefresh) {
             params.req.session.failedTokenRefresh = true;
             refresh_token({
                 req: params.req,
