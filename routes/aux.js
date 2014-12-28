@@ -170,7 +170,7 @@ exports.create_group = function(req, res) {
         } else {
             console.log('There was a problem creating the group...');
             console.log(err, response.statusCode);
-            res.status(500).send(err + ' ' + response + ' ' + body);
+            res.sendStatus(500).send(err + ' ' + response + ' ' + body);
         }
     });
 };
@@ -254,7 +254,11 @@ exports.find_nearby_groups = function(req, res) {
         .exec(sendData);
 };
 
-
+/**
+ * Starts a new round for the passed in group
+ *
+ * @param {string} groupId
+ */
 var startNextRound = function(groupId) {
     var groupRef = firebaseRef.child('groups').child(groupId),
         timeLeftRef = groupRef.child('time_left'),

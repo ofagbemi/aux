@@ -605,17 +605,17 @@ $(document).ready(function() {
     });
     
     tracksRef.on('child_changed', function(snapshot, prevSnapshot) {
-        var val = snapshot.val();
         
         // We'll ignore the child_changed call for updates to length
         if(snapshot.key() === 'length') {
             return;
         }
         
-        var numVotes = val.num_votes,
+        var val = snapshot.val(),
             trackId = val.id,
-            trackElem = $('.track[track-id="' + trackId + '"]'),
-            numVotesElem = trackElem.find('.num-votes');
+            numVotes = val.num_votes,
+            oldNumVotes = votingTrackObjects[trackId].num_votes,
+            trackElem = $('.voting-object.track[track-id="' + trackId + '"]');
         
         // update this track's record in the voting tracks store
         votingTrackObjects[trackId] = val;
@@ -626,8 +626,6 @@ $(document).ready(function() {
         // Called immediately if everything can be found okay. Otherwise,
         // it's only called once the num-votes element has been loaded
         var setUpVoteElems = function() {
-            var oldNumVotes = numVotesElem.text();
-            numVotesElem.text(numVotes);
             numTotalVotes += (numVotes - oldNumVotes);
             groupFns.adjustVoteIndicators();
             groupFns.moveVotingObjects(true);
@@ -639,15 +637,14 @@ $(document).ready(function() {
             }
         };
         
-        // If the num-votes element couldn't be found, it's likely that it just
+        // If the track element couldn't be found, it's likely that it just
         // hasn't been added to the DOM by the time the child_changed handler
         // is called. We set an interval here that checks repeatedly for the DOM
         // element until it's loaded
-        if(numVotesElem.length === 0) {
+        if(trackElem.length === 0) {
             var interval = setInterval(function() {
                 trackElem = $('.track[track-id="' + trackId + '"]');
-                numVotesElem = trackElem.find('.num-votes');
-                if(numVotesElem.length === 0) {return;}
+                if(trackElem.length === 0) {return;}
                 clearInterval(interval);
                 setUpVoteElems();
             }, 200);
