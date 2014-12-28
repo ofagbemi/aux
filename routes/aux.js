@@ -252,11 +252,38 @@ exports.find_nearby_groups = function(req, res) {
         .exec(sendData);
 };
 
+
+var startNextRound = function(groupId) {
+    var groupRef = firebaseRef.child('groups').child(groupId),
+        timeLeftRef = groupRef.child('time_left'),
+        roundNumRef = groupRef.child('round_num');
+    
+    roundNumRef.transaction(function(currentRoundNum) {
+        return (currentRoundNum || 0) + 1;
+    });
+    
+    var interval = setInterval(function() {
+        timeLeftRef.transaction(function(currentTime) {
+            if(!currentTime) {
+                // If the timer isn't set, set it
+                return voteWaitTime;
+            } else if(currentTime <= 1000) {
+                // If we're about to run the timer down, stop
+                clearInterval(interval);
+                return 0;
+            } else {
+                // Otherwise, update the timer
+                return currentTime - 1000;
+            }
+        });
+    }, 1000);
+};
+
 exports.add_track_for_voting = function(req, res) {
-    var track = JSON.parse(req.body.track);
-    var trackId = track.id;
-    var groupId = req.body.group_id;
-    var voterId = req.session.user_id;
+    var track = JSON.parse(req.body.track),
+        trackId = track.id,
+        groupId = req.body.group_id,
+        voterId = req.session.user_id;
     
     var groupRef = firebaseRef.child('groups').child(groupId);
     
@@ -267,28 +294,16 @@ exports.add_track_for_voting = function(req, res) {
     
     // If this is the first track we're adding, we want to go ahead and
     // kick off the timer. Otherwise, assume the timer's already running
-    votingTracksRef.child('length').transaction(function(currentValue) {
-        if(!currentValue) {
-            // if the length is either 0 or undefined, go ahead and start
-            // the timer and set it to 1
-            var timeLeftRef = groupRef.child('time_left');
-            // decrement time left every second, starting from voteWatiTime
-            var interval = setInterval(function() {
-                timeLeftRef.transaction(function(current) {
-                    // if there's no time on the clock, get it running
-                    if(current === undefined || current === null) return parseInt(voteWaitTime);
-                    // When time's up, we clear the interval and set the reference's
-                    // value to 0. We catch this value on the front-end, and
-                    // send a new request to the add_track_to_playlist handler
-                    if(current <= 0) {
-                        clearInterval(interval);
-                        return 0;
-                    }
-                    return current - 1000;
-                });
-            }, 1000);
+    var lengthRef = votingTracksRef.child('length');
+    lengthRef.once('value', function(snapshot) {
+        // if the length is either 0 or undefined, go ahead and start
+        // the timer
+        if(!snapshot.val()) {
+            startNextRound(groupId);
         }
-        return (currentValue || 0) + 1;
+        lengthRef.transaction(function(currentValue) {
+            return (currentValue || 0) + 1;
+        });
     });
   
     vote({
@@ -333,11 +348,27 @@ exports.add_leader_to_playlist = function(req, res) {
             return;
         }
         // Now we'll remove that track from the voting tracks
-        groupRef.child('voting_tracks').child(winningTrackKey).remove(function(err) {
+        var votingTracksRef = groupRef.child('voting_tracks');
+        votingTracksRef.child(winningTrackKey).remove(function(err) {
             if(err) {
                 res.status(500).json({err: err});
                 return;
             }
+            
+            var lengthRef = votingTracksRef.child('length');
+            lengthRef.once('value', function(snapshot) {
+                // If there are still tracks left to vote on, then move on to
+                // the next voting round
+                if(snapshot.val() > 1) {
+                    startNextRound(groupId);
+                }
+                
+                // Set off a transaction to decrement the length
+                lengthRef.transaction(function(currentLength) {
+                    currentLength--;
+                    return currentLength;
+                });
+            });
             
             var userId = group.owner_id,
                 playlistId = group.playlist_id,
