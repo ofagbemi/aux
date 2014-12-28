@@ -590,11 +590,18 @@ $(document).ready(function() {
     tracksRef.on('child_removed', function(snapshot) {
         var val = snapshot.val(),
             id = val.id;
-        console.log(snapshot.key(), val);
-        console.log('removing track', id);
         
         delete votingTrackObjects[id];
         $('.voting-object[track-id="' + id + '"]').remove();
+        
+        // reset the winner's circle if there's a new winner
+        var winner = groupFns.getWinningTrackJson();
+        if(winner) {
+            groupFns.setWinnersCircle(groupFns.getWinningTrackJson());
+        } else {
+            // if there aren't any tracks left, hide the winner's circle
+            groupFns.hideWinnersCircle();
+        }
     });
     
     tracksRef.on('child_changed', function(snapshot, prevSnapshot) {
