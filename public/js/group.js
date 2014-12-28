@@ -560,6 +560,7 @@ $(document).ready(function() {
         return winningTrack;
     };
     
+    var mostVotes = 0;
     tracksRef.on('child_added', function(snapshot) {
         var val = snapshot.val();
         // quit if some child besides the track hash was added
@@ -570,6 +571,10 @@ $(document).ready(function() {
         numTotalVotes += val.num_votes;
         votingTrackObjects[val.id] = val;
         
+        if(val.num_votes > mostVotes) {
+            mostVotes = val.num_votes;
+            groupFns.setWinnersCircle(val);
+        }
         
         // hide loading wheel if it's up
         $('.vote-wrapper .loading-icon').hide();
