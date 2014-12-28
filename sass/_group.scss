@@ -90,21 +90,18 @@ header h2 {
   @include box-shadow(inset 0 4px 4px rgba(95, 95, 95, 0.01));
 }
 
-.window-select .time-indicator {
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
+.time-indicator {
   width: 100%;
+  height: 2px;
+  margin: 8px 0;
 }
 
-.window-select .time-indicator .bar {
+.time-indicator .bar {
   width: 0;
-  /* height: 100%; */
-  background-color: #51be51;
-  
-  @include box-shadow(inset 0px -2px rgba(42, 42, 42, 0.08));
-  @include transition(width 0.2s);
+  height: 100%;
+  background-color: rgba(239, 239, 239, 0.29);
+  @include box-shadow(0 1px 1px rgba(0, 0, 0, 0.2));
+  @include transition(width 0.9s);
 }
 
 .window-select .buttons {
