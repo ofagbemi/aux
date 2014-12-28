@@ -1,6 +1,4 @@
-.spotify-object,
-.voting-object {
-  @include border-radius(2px);
+.spotify-object {
   margin-top: 11px;
   width: 100%;
 }
@@ -9,8 +7,7 @@
   display: none;
 }
 
-.spotify-object > .inner,
-.voting-object > .inner {
+.spotify-object > .inner {
   position: relative;
   background-color: rgba(255, 255, 255, 0.9);
   box-sizing: border-box;
@@ -20,92 +17,7 @@
   @include box-shadow(0 0 11px rgba(0, 0, 0, 0.28));
 }
 
-.voting-object {
-  position: relative;
-  @include display(flex);
-  @include flex-wrap(nowrap);
-}
-
-.voting-object > .inner {
-  width: 80%;
-  position: relative;
-  
-  @include display(inline-flex);
-}
-
-.voting-object > .inner .votes-indicator {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  
-  background-color: rgba(180, 211, 240, 0.49);
-  height: 3px;
-  width: 100%;
-}
-
-.voting-object > .inner .votes-indicator > .bar {
-  background-color: #2993ec;
-  
-  width: 0%;
-  height: 100%;
-  
-  @include transition(width 0.4s);
-}
-
-.voting-object .vote-button {
-  width: 20%;
-  box-sizing: border-box;
-  padding: 11px;
-  background-color: rgb(197, 83, 96);
-  
-  @include display(inline-flex);
-  @include align-items(center);
-  @include justify-content(center);
-  
-  @include border-radius(0 4px 4px 0);
-  @include box-shadow(inset 0px -3px rgb(129, 35, 71));
-  @include transition( (box-shadow 0.2s, background-color 0.2s) );
-}
-
-.voting-object .vote-button .num-votes {
-  color: rgb(255, 255, 235);
-  font-family: Helvetica Neue;
-  font-weight: 200;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.18);
-  
-  @include transition(margin-top 0.2s);
-}
-
-.voting-object .vote-button.active {
-  background-color: #65be65;
-  @include box-shadow(inset 2px 2px 1px #508C4E);
-}
-
-.voting-object .vote-button.active .num-votes {
-  margin-top: 3px;
-}
-
-.spotify-object > .inner .cover,
-.voting-object > .inner .cover {
-  position: absolute;
-  height: 100%;
-  width: 0;
-  right: 0;
-  top: 0;
-  background-color: rgb(81, 176, 234);
-  z-index: 0;
-  overflow: hidden;
-  
-  @include display(flex);
-  @include justify-content(center);
-  @include align-items(center);
-  
-  @include transition(width 0.8s);
-}
-
-.spotify-object .icon,
-.voting-object .icon {
-  display: block;
+.spotify-object .inner .icon {
   width: 105%;
   margin-left: -2.5%;
   background-size: cover;
@@ -116,8 +28,7 @@
   @include border-radius(4px);
 }
 
-.spotify-object .copy,
-.voting-object .copy {
+.spotify-object .copy {
   display: block;
   font-family: 'Helvetica Neue', 'Arial', sans-serif;
   text-align: center;
@@ -125,39 +36,34 @@
   padding-bottom: 0;
 }
 
-.spotify-object .copy .header h2,
-.voting-object .copy .header h2 {
+.spotify-object .copy .header h2 {
   color: black;
   font-weight: 300;
   font-size: 21px;
   padding-bottom: 11px;
 }
 
-.spotify-object .copy .body,
-.voting-object .copy .body {
+.spotify-object .copy .body {
   padding-top: 4px;
 }
 
-.spotify-object .copy .body .description,
-.voting-object .copy .body .description {
+.spotify-object .copy .body .description {
   font-weight: 200;
   color: #3d3d3d;
   font-size: 11px;
 }
 
-.spotify-object .copy .body .description a,
-.voting-object .copy .body .description a {
+.spotify-object .copy .body .description a {
   color: inherit;
   font-weight: 400;
 }
 
-.spotify-object .add-track-button,
-.voting-object .add-track-button {
+.spotify-object .add-track-button {
   display: inline-block;
   background: rgba(110, 110, 110, 0.09);
   color: rgb(68, 68, 68);
   text-align: center;
-  font-family: 'Helvetica';
+  font-family: 'Helvetica', sans-serif;
   box-sizing: border-box;
   font-weight: 200;
   text-transform: uppercase;
@@ -167,52 +73,16 @@
   height: 64px;
   line-height: 62px;
   margin: 18px 0;
-  
   cursor: pointer;
   
   @include border-radius(64px);
 }
 
-/*
-.spotify-object .add-track-button span:before,
-.spotify-object > .inner .cover:before,
-.voting-object .add-track-button span:before,
-.voting-object > .inner .cover:before {
-  content: '';
-  width: 10px;
-  height: 10px;
-  background-image: url('../images/icons/check/noun_20624.svg');
-  background-size: 9px 9px;
-  background-repeat: no-repeat;
-  display: inline-block;
-  margin-right: 6px;
-  background-position: center;
-  padding: 2px;
-  margin-bottom: -3px;
-  
-  @include border-radius(10px);
-}
-*/
-
-.spotify-object .add-track-button span:before,
-.spotify-object > .inner .cover:before {
+.spotify-object .add-track-button span:before {
   background-color: rgba(0, 0, 0, 0.11);
 }
 
-
-.voting-object .add-track-button span:before,
-.voting-object > .inner .cover:before {
-  background-color: #3c9f3c;
-}
-
-.spotify-object > .inner .cover:before,
-.voting-object > .inner .cover:before {
-  width: 18px;
-  height: 18px;
-}
-
-.spotify-object .add-track-button.loading span:before,
-.voting-object .add-track-button.loading span:before {
+.spotify-object .add-track-button.loading span:before {
   content: '';
   width: 10px;
   height: 10px;
@@ -223,25 +93,4 @@
   margin-right: 6px;
   background-position: center;
   background-color: transparent;
-}
-
-.voting-object.winning > .inner {
-  background-color: transparent;
-}
-
-.voting-object.winning .time-indicator {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 80%;
-  height: 100%;
-  background-color: #ffffff;
-}
-
-.voting-object.winning .time-indicator .bar {
-  background-color: rgba(47, 152, 47, 0.31);
-  width: 0;
-  height: 100%;
-  
-  @include transition(width 0.2s);
 }

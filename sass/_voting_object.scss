@@ -1,0 +1,46 @@
+.voting-object {
+  font-family: 'Helvetica Neue', sans-serif;
+  margin-bottom: 11px;
+  color: rgba(255, 255, 255, 0.88);
+  
+  @include display(flex);
+  
+  .copy {
+    text-shadow: 0 0 2px rgba(0, 0, 0, 0.25);
+    
+    .header {
+      margin-bottom: 2px;
+      font-weight: 200;
+      letter-spacing: 1px;
+      font-size: 12px;
+    }
+    
+    .body {
+      font-size: 12px;
+      font-weight: 200;
+    }
+  }
+  .vote-button {
+    margin-left: auto;
+    @include display(inline-flex);
+    text-transform: uppercase;
+    font-weight: 200;
+    text-shadow: 0 0 2px rgba(0, 0, 0, 0.4);
+    font-size: 12px;
+    
+    @include align-items(center);
+    @include justify-content(center);
+  }
+  
+  .vote-button:not(.active) {
+    opacity: 0.4;
+    
+    &:before {
+      content: 'vote';
+    }
+  }
+  
+  .vote-button.active:before {
+    content: 'voted';
+  }
+}
