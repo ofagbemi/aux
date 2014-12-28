@@ -1,7 +1,7 @@
-.group.swap-page .background {
+.group.swap-page > .background {
   width: 120%;
   height: 120%;
-  position: absolute;
+  position: fixed;
   top: -10%;
   background-color: black;
   left: -10%;
