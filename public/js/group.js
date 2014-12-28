@@ -948,10 +948,13 @@ $(document).ready(function() {
     /* timer */
     var voteWaitTime = 30000;
     groupRef.child('time_left').on('value', function(snapshot) {
-        var val = snapshot.val();
-        if(val === undefined || val === null) {return;}
-        $('.time-indicator .bar').css({
-            width: ( ( (voteWaitTime - val) / voteWaitTime ) * 100) + '%',
-        });
+        var ms = snapshot.val();
+        if(ms === undefined || ms === null) {return;}
+        var seconds = Math.floor((ms % 60000) / 1000);
+        var minutes = Math.floor(ms / 60000);
+        
+        if(seconds < 10) {seconds = '0' + seconds;}
+        var time = minutes + ':' + seconds;
+        $('.time-indicator .time').text(time);
     });
 });
