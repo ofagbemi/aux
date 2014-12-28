@@ -156,6 +156,8 @@ exports.create_group = function(req, res) {
                 var firebaseGroup = {
                     owner_id: user_id,
                     playlist_id: playlist.id,
+                    access_token: req.session.access_token,
+                    refresh_token: req.session.refresh_token,
                 };
 
                 // store the group object in firebase
@@ -268,8 +270,12 @@ var startNextRound = function(groupId) {
                 // If the timer isn't set, set it
                 return voteWaitTime;
             } else if(currentTime <= 1000) {
-                // If we're about to run the timer down, stop
+                // If we're about to run the timer down, stop, and add the
+                // leader to the playlist
                 clearInterval(interval);
+                addLeaderToPlaylist(groupId);
+                
+                // time's up, return 0
                 return 0;
             } else {
                 // Otherwise, update the timer
@@ -323,9 +329,13 @@ exports.add_track_for_voting = function(req, res) {
 
 /**
  * Adds a track to a the playlist that belongs to a given group.
+ *
+ * @param {string} groupId
+ * @param {function} [complete]
  */
-exports.add_leader_to_playlist = function(req, res) {
-    var groupId = req.body.group_id;
+var addLeaderToPlaylist = function(groupId, complete) {
+    
+    complete = complete || function() {return undefined;};
     var groupRef = firebaseRef.child('groups').child(groupId);
     groupRef.once('value', function(snapshot) {
         var group = snapshot.val();
@@ -344,14 +354,15 @@ exports.add_leader_to_playlist = function(req, res) {
         }
         
         if(!winningTrackKey) {
-            res.status(404).send('No winning track found');
+            complete('No winning track found');
             return;
         }
+        
         // Now we'll remove that track from the voting tracks
         var votingTracksRef = groupRef.child('voting_tracks');
         votingTracksRef.child(winningTrackKey).remove(function(err) {
             if(err) {
-                res.status(500).json({err: err});
+                complete(err);
                 return;
             }
             
@@ -372,20 +383,22 @@ exports.add_leader_to_playlist = function(req, res) {
             
             var userId = group.owner_id,
                 playlistId = group.playlist_id,
-                trackUri = winningTrack.uri,
-                accessToken = req.session.access_token;
+                trackUri = winningTrack.uri;
             
-            spotify.add_track_to_playlist(
-                userId, playlistId, trackUri, accessToken,
-                function(err, response, body) {
-                    if(err) {
-                        console.log('couldn\'t add track to playlist', err);
-                        res.status(500).json({err: err});
-                    } else {
-                        console.log('Adding track...');
-                        var msg = 'added track ' + trackUri + ' to playlist ' + playlistId
-                        res.status(200).json({msg: msg});
-                    }
+            groupRef.child('access_token').once('value', function(accessTokenSnapshot) {
+                var accessToken = accessTokenSnapshot.val();
+                spotify.add_track_to_playlist(
+                    userId, playlistId, trackUri, accessToken,
+                    function(err, response, body) {
+                        if(err) {
+                            console.log('couldn\'t add track to playlist', err);
+                            complete(err);
+                        } else {
+                            console.log('Adding track...');
+                            console.log('added track ' + trackUri + ' to playlist ' + playlistId);
+                            complete();
+                        }
+                });
             });
         });
     });
@@ -400,7 +413,7 @@ exports.add_leader_to_playlist = function(req, res) {
  *                                                already voted for this track
  *                            Number numVotes number of votes to add
              
- * @param {Function} [callback] Callback passed as the onComplete parameter to a call to Firebase.transaction()
+ * @param {function} [callback] Callback passed as the onComplete parameter to a call to Firebase.transaction()
  */
 var vote = function(params, callback) {
     var groupId = params.groupId,

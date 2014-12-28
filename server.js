@@ -99,7 +99,6 @@ app.get('/get_user_id', aux.get_user_id);
 app.post('/create_group', aux.create_group);
 app.post('/add_track_for_voting', aux.add_track_for_voting);
 app.post('/vote', aux.vote);
-app.post('/add_leader_to_playlist', aux.add_leader_to_playlist);
 
 
 var spotify = require('./routes/spotify');

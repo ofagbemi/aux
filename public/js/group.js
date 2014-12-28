@@ -941,7 +941,7 @@ $(document).ready(function() {
     groupRef.child('time_left').on('value', function(snapshot) {
         var val = snapshot.val();
         if(val === undefined || val === null) {return;}
-        if(val === 0) {
+        /*if(val === 0) {
             $.ajax({
                 type: 'POST',
                 url: '/add_leader_to_playlist',
@@ -952,7 +952,7 @@ $(document).ready(function() {
                 // TODO: signify that the track has been added to the
                 //       playlist
             });
-        }
+        }*/
         $('.time-indicator .bar').css({
             width: ( ( (voteWaitTime - val) / voteWaitTime ) * 100) + '%',
         });
