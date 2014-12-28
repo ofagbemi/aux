@@ -608,6 +608,78 @@ $(document).ready(function() {
         }
     });
     
+    /**
+     * Fills the winner's circle element with the data in trackJson
+     *
+     * @param Object trackJson JSON object for track to render
+     */
+    groupFns.setWinnersCircle = function(trackJson) {
+        if(!trackJson) {
+            return;
+        }
+        
+        var name = trackJson.name,
+            artists = trackJson.artists,
+            img = trackJson.album.images[0].url,
+            
+            // There's a chance that the number of votes is undefined at this
+            // point in time, though it'll probably be updated again before
+            // this matters anyway
+            numVotes = trackJson.num_votes || 0,
+            
+            winnersCircleElem = $('.winners-circle'),
+            iconElem = winnersCircleElem.find('.icon'),
+            infoElem = winnersCircleElem.find('.info');
+        
+        iconElem.css({
+            backgroundImage: 'url("' + img + '")'
+        });
+        
+        infoElem.find('.track').text(name);
+        var names = [];
+        for(var i = 0; i < artists.length; i++) {
+            names.push(artists[i].name);
+        }
+        infoElem.find('.artist').text(names.join(', '));
+        infoElem.find('.num-votes').text(numVotes);
+        infoElem.find('.vote-text').text(parseInt(numVotes) === 1 ? 'vote' : 'votes');
+    };
+    
+    /**
+     * Shows the winner's circle
+     */
+    groupFns.showWinnersCircle = function() {
+        var winnersCircleElem = $('.winners-circle');
+        if(winnersCircleElem.is(':visible')) {
+            return;
+        }
+        winnersCircleElem
+            .css({
+                opacity: 0,
+            })
+            .velocity('slideDown')
+            .velocity({
+                opacity: 1,
+            });
+    };
+    
+    /**
+     * Hides the winner's circle
+     */
+    groupFns.hideWinnersCircle = function() {
+        var winnersCircleElem = $('.winners-circle');
+        if(!winnersCircleElem.is(':visible')) {
+            return;
+        }
+        winnersCircleElem
+            .velocity({
+                opacity: 0,
+            }).velocity('slideUp')
+            .css({
+                opacity: 1,
+            });
+    };
+    
     groupFns.votingButtonClickFn = function(e) {
         e.preventDefault();
         var trackId = $(this).parents('.track').attr('track-id');
