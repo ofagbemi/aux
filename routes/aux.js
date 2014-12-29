@@ -1,9 +1,12 @@
-var request  = require('request');
-var crypto   = require('crypto');
-var Firebase = require('firebase');
+var request  = require('request'),
+    crypto   = require('crypto'),
+    models   = require('../models.js'),
+    Firebase = require('firebase'),
+    SpotifyAPI  = require('spotify-web-api-node');
 
-var spotify  = require('./spotify');
-var models   = require('../models.js');
+// Milliseconds between voting rounds
+var voteWaitTime = 30000;
+exports.voteWaitTime = this.voteWaitTime;
 
 var firebaseRef = new Firebase(process.env.FIREBASE_URL);
 firebaseRef.authWithCustomToken(process.env.FIREBASE_SECRET, function(err) {
@@ -14,9 +17,249 @@ firebaseRef.authWithCustomToken(process.env.FIREBASE_SECRET, function(err) {
     }
 });
 
-// Milliseconds between voting rounds
-var voteWaitTime = 30000;
-exports.voteWaitTime = this.voteWaitTime;
+var spotifyCredentials = {
+    clientId:     'dd954dc18db547cfb93af5f71da7936f',
+    clientSecret:  process.env.SPOTIFY_CLIENT_SECRET,
+    redirectUri:  'http://localhost:5000/auth'
+},
+    scopes = ['user-read-private', 'user-read-email', 'playlist-modify-public',
+              'playlist-modify-private'],
+    stateKey = 'spotify_auth_state';
+
+/**
+ * Called when it's time to actually log the user into Spotify.
+ * Redirects to Spotify's authorize endpoint, which then redirects
+ * to the auth callback
+ *
+ * @param req
+ * @param res
+ */
+exports.login = function(req, res) {
+    
+    var spotify = new SpotifyAPI(spotifyCredentials);
+    var state = _generateRandomString(16);
+    
+    // store the state so we can check it in the auth endpoint
+    res.cookie(stateKey, state);
+    var authUrl = spotify.createAuthorizeURL(scopes, state);
+    res.redirect(authUrl);
+};
+
+/**
+ * Authenticates the user. Checks against stored browser
+ * state cookie and sends final post request to Spotify's
+ * profile endpoint
+ *
+ * @param req
+ * @param res
+ */
+exports.auth = function(req, res) {
+    var state = req.query.state || null,
+        code = req.query.code || null,
+        storedState = req.cookies ? req.cookies[stateKey] : null;
+    
+    // Check the state
+    if(state === null || state !== storedState) {
+        res.statusCode(403).send('bad state');
+        return;
+    }
+    
+    var spotify = new SpotifyAPI(spotifyCredentials);
+    
+    spotify.authorizationCodeGrant(code).then(function(data) {
+        req.session.access_token = data.access_token;
+        req.session.refresh_token = data.refresh_token;
+        
+        spotify.setAccessToken(data.access_token);
+        spotify.setRefreshToken(data.refresh_token);
+        
+        spotify.getMe().then(function(data) {
+            req.session.spotify_id = data.id;
+            res.redirect('/');
+        }, function(err) {
+            console.log('error getting user:', err);
+            res.statusCode(500).send('error getting user: ', err);
+        });
+    }, function(err) {
+        console.log('error getting access token:', err);
+        res.statusCode(500).send('error getting access token: ' + err);
+    });
+};
+
+/**
+ * Creates a group and stores it in the firebase and its location
+ * data on Mongo
+ *
+ * @param req
+ * @param res
+ */
+exports.create_group = function(req, res) {
+    var spotifyId  = req.session.spotify_id,
+        name     = req.body.name,
+        location = req.body.location,
+        public   = req.body.public || false;
+    
+    var spotify = new SpotifyAPI({
+        accessToken: req.session.access_token,
+        refreshToken: req.session.refresh_token
+    });
+    
+    spotify.createPlaylist(spotifyId, name, {public: public})
+        .then(function(playlist) {
+            // Store the group with its location on mongo
+            models.Group.create({
+                user_id: spotifyId,
+                name: name,
+                latitude: location.latitude,
+                longitude: location.longitude
+            }, function(err, group) {
+                if(err) {
+                    console.log('error saving group location', err);
+                    res.status(500).send(err);
+                    return;
+                }
+                
+                // create the group object to save to firebase
+                var firebaseGroup = {
+                    spotify_id: spotifyId,
+                    playlist_id: playlist.id,
+                    access_token: req.session.access_token,
+                    refresh_token: req.session.refresh_token
+                };
+
+                // store the group object in firebase
+                firebaseRef.child('groups').child(group.id).set(firebaseGroup);
+                
+                // add the group_id field to the object before returning
+                // it as json
+                res.status(201).json(group);
+            });
+        }, function(err) {
+            console.log('error creating group: ' + err);
+            res.sendStatus(500).send('error creating group: ' + err);
+        });
+};
+
+/**
+ * Searches for tracks via the Spotify search api
+ *
+ * @param req
+ * @param res
+ */
+exports.search = function(req, res) {
+    
+    var spotify = new SpotifyAPI({
+        accessToken: req.session.access_token,
+        refreshToken: req.session.refresh_token
+    });
+    
+    var query = req.query.q,
+        limit = req.query.limit || 10,
+        offset = req.query.offset || 0,
+        renderHtml = req.query.html === 'true' ||
+                     req.query.html === true;
+    
+    spotify.searchTracks(query, {limit: limit, offset: offset}).then(function(searchJson) {
+        searchJson.q = query;
+        if(renderHtml) {
+            res.render('partials/search-results',
+                {layout: false,
+                search_results: searchJson}, function(err, html) {
+              var length = 0;
+              for(var key in searchJson) {
+                  length += searchJson[key].total;
+              }
+              searchJson.html = html;
+              searchJson.length = length;
+              res.status(200).json(searchJson);
+            });
+        } else {
+            res.statusCode(200).json(searchJson);
+        }
+    }, function(err) {
+        console.log('error searching with query ', query, ':', err);
+        res.statusCode(500).send('error searching with query ' +
+                                 query + ': ' + err);
+    });
+};
+
+/**
+ * Adds a track to a the playlist that belongs to a given group.
+ *
+ * @param {string} groupId
+ * @param {function} [complete]
+ */
+var addLeaderToPlaylist = function(groupId, complete) {
+    
+    complete = complete || function() {return undefined;};
+    
+    var groupRef = firebaseRef.child('groups').child(groupId);
+    groupRef.once('value', function(snapshot) {
+        
+        // Start by getting the group from Firebase. Then we'll run through
+        // its voting tracks to determine which is the winner
+        var group = snapshot.val(),
+            winningTrack = undefined,
+            winningTrackKey = undefined,
+            winningTrackNumVotes = -1,
+            spotify = new SpotifyAPI({
+                accessToken: group.access_token,
+                refreshToken: group.refresh_token
+            });
+        for(var key in group.voting_tracks) {
+            var numVotes = group.voting_tracks[key].num_votes || 0;
+            if(numVotes > winningTrackNumVotes) {
+                winningTrack = group.voting_tracks[key];
+                winningTrackKey = key;
+                winningTrackNumVotes = numVotes;
+            }
+        }
+        if(!winningTrackKey) {
+            complete('No winning track found');
+            return;
+        }
+        
+        // Remove the winner from the group's list of voting tracks
+        var votingTracksRef = groupRef.child('voting_tracks');
+        votingTracksRef.child(winningTrackKey).remove(function(err) {
+            if(err) {
+                complete(err);
+                return;
+            }
+            
+            // Update voting tracks length and, if there are still more tracks
+            // left, kick off the next voting round
+            var lengthRef = votingTracksRef.child('length');
+            lengthRef.once('value', function(snapshot) {
+                // If there are still tracks left to vote on, then move on to
+                // the next voting round
+                if(snapshot.val() > 1) {
+                    startNextRound(groupId);
+                }
+                
+                // Set off a transaction to decrement the length
+                lengthRef.transaction(function(currentLength) {
+                    currentLength--;
+                    return currentLength;
+                });
+            });
+            
+            // Add the track to the group's playlist
+            spotify.addTracksToPlaylist(
+                group.spotify_id, group.playlist_id, winningTrack.uri
+            ).then(function(data) {
+                console.log('added track', winningTrack.uri, 'to playlist',
+                            group.playlist_id);
+                complete();
+            }, function(err) {
+                console.log('there was an error adding', winningTrack.uri,
+                            'to playlist', group.playlist_id, ':', err);
+                complete(err);
+            });
+        });
+    });
+};
+
 
 exports.get_user_id = function(req, res) {
     res.status(200).json({user_id: req.session.user_id});
@@ -27,6 +270,7 @@ exports.create = function(req, res) {
 };
 
 exports.index = function(req, res) {
+    
     var layout = req.query.layout !== false;
     
     if(layout === false) {
@@ -46,6 +290,11 @@ exports.find = function(req, res) {
     }
 }
 
+/**
+ * Generates a user id based on a given group id
+ *
+ * @param {string} group_id
+ */
 var generateUserId = function(group_id) {
     return crypto.createHash('md5').update(group_id + new Date()).digest('hex');
 }
@@ -66,6 +315,9 @@ exports.show_group = function(req, res) {
                 if(!req.session.user_id) {
                     req.session.group_id = req.params.group_id;
                     req.session.user_id  = generateUserId(req.session.group_id);
+                    
+                    // spotify ID of the owner of the playlist
+                    req.session.spotify_id = groupData.spotify_id;
                 }
                 
                 // might as well refresh the access token here
@@ -92,6 +344,9 @@ exports.show_group = function(req, res) {
 /**
  * Renders the html for a single voting-object given a passed in
  * JSON hash (req.query.json)
+ *
+ * @param req
+ * @param res
  */
 exports.render_voting_track = function(req, res) {
     var hash = JSON.parse(req.query.json);
@@ -103,117 +358,6 @@ exports.render_voting_track = function(req, res) {
     hash.voted_for = hash.voter_ids &&
                      hash.voter_ids[req.session.user_id] !== undefined;
     res.render('partials/voting-object', hash);
-};
-
-/**
- * Creates a group and stores it in the firebase and its location
- * data on Mongo
- *
- *   'user_id' : Spotify user ID
- *   'name'    : Group name
- *   'location': Location object
- *   'public'  : true if public playlist
- */
-exports.create_group = function(req, res) {
-    var user_id  = req.body.user_id,
-        name     = req.body.name,
-        location = req.body.location,
-        public   = req.body.public || false;
-    
-    var playlistOptions = {
-        user_id: user_id,
-        name: name,
-        public: public,
-        access_token: req.session.access_token,
-    };
-    
-    // create the playlist, then create and store the group
-    spotify.create_playlist(playlistOptions, function(err, response, body) {
-        if(!err &&  (response.statusCode === 200 || response.statusCode === 201)) {
-            // if the playlist is created successfully, build
-            // the group object and store it
-            
-            // store the location object on mongo
-            models.Group.create({
-                user_id: user_id,
-                name: name,
-                latitude: location.latitude,
-                longitude: location.longitude,
-                group_access_token: req.session.access_token,
-                group_refresh_token: req.session.refresh_token,
-            }, function(err, group) {
-                if(err) {
-                    console.log('error saving group location', err);
-                    res.status(500).send(err);
-                    return;
-                }
-                
-                // no error, create the group object to save
-                // to firebase
-              
-                // first, build the playlist json
-                var playlist = JSON.parse(body);
-                var firebaseGroup = {
-                    owner_id: user_id,
-                    playlist_id: playlist.id,
-                    access_token: req.session.access_token,
-                    refresh_token: req.session.refresh_token,
-                };
-
-                // store the group object in firebase
-                firebaseRef.child('groups').child(group.id).set(firebaseGroup);
-                
-                // add the group_id field to the object before returning
-                // it as json
-                res.status(201).json(group);
-            });
-        } else {
-            console.log('There was a problem creating the group...');
-            console.log(err, response.statusCode);
-            res.sendStatus(500).send(err + ' ' + response + ' ' + body);
-        }
-    });
-};
-
-// 'q', 'type', 'limit', 'offset',
-// and 'access_token'
-// responds with object with html field and length field
-exports.search = function(req, res) {
-    var renderHtml = req.query.html === 'true' ||
-                     req.query.html === true;
-    
-    var searchOptions = {
-        q: req.query.q,
-        type: req.query.type || 'artist,track,album',
-        limit: req.query.limit || 10,
-        offset: req.query.offset || 0,
-        access_token: req.session.access_token,
-        req: req,
-    };
-    
-    spotify.search(searchOptions, function(err, response, body) {
-        if(!err && response.statusCode === 200) {
-            var searchJson = JSON.parse(body);
-            searchJson.q = req.query.q;
-            if(renderHtml) {
-                res.render('partials/search-results',
-                    {layout: false,
-                    search_results: searchJson}, function(err, html) {
-                  var length = 0;
-                  for(var key in searchJson) {
-                      length += searchJson[key].total;
-                  }
-                  searchJson.html = html;
-                  searchJson.length = length;
-                  res.status(200).json(searchJson);
-                });
-            } else {
-                res.status(200).json(searchJson);
-            }
-        } else {
-            res.status(response.statusCode).send(err);
-        }
-    });
 };
 
 /**
@@ -332,134 +476,6 @@ exports.add_track_for_voting = function(req, res) {
 };
 
 /**
- * Adds a track to a the playlist that belongs to a given group.
- *
- * @param {string} groupId
- * @param {function} [complete]
- */
-var addLeaderToPlaylist = function(groupId, complete) {
-    
-    complete = complete || function() {return undefined;};
-    var groupRef = firebaseRef.child('groups').child(groupId);
-    groupRef.once('value', function(snapshot) {
-        
-        // Start by getting the group from Firebase. Then we'll run through
-        // its voting tracks to determine which is the winner
-        var group = snapshot.val(),
-            winningTrack = undefined,
-            winningTrackKey = undefined,
-            winningTrackNumVotes = -1;
-        
-        for(var key in group.voting_tracks) {
-            var numVotes = group.voting_tracks[key].num_votes || 0;
-            if(numVotes > winningTrackNumVotes) {
-                winningTrack = group.voting_tracks[key];
-                winningTrackKey = key;
-                winningTrackNumVotes = numVotes;
-            }
-        }
-        if(!winningTrackKey) {
-            complete('No winning track found');
-            return;
-        }
-        
-        // Remove the winner from the group's list of voting tracks
-        var votingTracksRef = groupRef.child('voting_tracks');
-        votingTracksRef.child(winningTrackKey).remove(function(err) {
-            if(err) {
-                complete(err);
-                return;
-            }
-            
-            // Update voting tracks length and, if there are still more tracks
-            // left, kick off the next voting round
-            var lengthRef = votingTracksRef.child('length');
-            lengthRef.once('value', function(snapshot) {
-                // If there are still tracks left to vote on, then move on to
-                // the next voting round
-                if(snapshot.val() > 1) {
-                    startNextRound(groupId);
-                }
-                
-                // Set off a transaction to decrement the length
-                lengthRef.transaction(function(currentLength) {
-                    currentLength--;
-                    return currentLength;
-                });
-            });
-            
-            var userId = group.owner_id,
-                playlistId = group.playlist_id,
-                trackUri = winningTrack.uri;
-            
-            /**
-             * Called when the POST to Spotify's API finishes
-             *
-             * @param err
-             * @param response
-             * @param body
-             */
-            var onComplete = function(err, response, body) {
-                if(err) {
-                    console.log('couldn\'t add track to playlist', err);
-                    complete(err);
-                } else {
-                    console.log('Adding track...');
-                    console.log('added track ' + trackUri + ' to playlist ' + playlistId);
-                    complete();
-                }
-            };
-            
-            /**
-             * We'll call this if we hit a 401--this probably means that our
-             * access token has expired. This handles the necessary update
-             * to the group access token and tries to save the track to the
-             * playlist again.
-             *
-             * @param err
-             * @param {string} newAccessToken
-             */
-            var onTokenRefresh = function(err, newAccessToken) {
-                if(err) {
-                    onComplete('couldn\'t refresh access token ' + err);
-                    return;
-                }
-                
-                console.log('updating access token');
-                updateAccessToken(groupId, newAccessToken);
-                spotify.addTrackToPlaylist(userId, playlistId, trackUri, newAccessToken, onComplete);
-            };
-            
-            var accessToken = group.access_token;
-            spotify.addTrackToPlaylist(
-                userId, playlistId, trackUri, accessToken,
-                function(err, response, body) {
-                    // If we get a 401, then the access token probably
-                    // needs to be refreshed
-                    if(response.statusCode === 401) {
-                        spotify.refreshToken(group.refresh_token, onTokenRefresh);
-                    } else {
-                        // Otherwise, just move on to the regular
-                        // onComplete call
-                        onComplete(err, response, body);
-                    }
-            });
-        });
-    });
-};
-
-/**
- * Updates the current access token
- *
- * @param {string} groupId
- * @param {string} accessToken
- */
-var updateAccessToken = function(groupId, accessToken) {
-    var groupRef = firebaseRef.child('groups').child(groupId);
-    groupRef.child('access_token').set(accessToken);
-};
-
-/**
  * Assigns a vote to a track from the specified user
  * 
  * @param {object} params A hash that should contain groupId, trackId, and voterId
@@ -467,7 +483,7 @@ var updateAccessToken = function(groupId, accessToken) {
  *                            boolean ignorePast Vote even if the user has
  *                                                already voted for this track
  *                            Number numVotes number of votes to add
-             
+ * 
  * @param {function} [callback] Callback passed as the onComplete parameter to a call to Firebase.transaction()
  */
 var vote = function(params, callback) {
@@ -498,6 +514,12 @@ var vote = function(params, callback) {
     });
 };
 
+/**
+ * Adds a vote to a given track
+ *
+ * @param req
+ * @param res
+ */
 exports.vote = function(req, res) {
     vote({groupId: req.body.group_id,
           trackId: req.body.track_id,
@@ -510,4 +532,19 @@ exports.vote = function(req, res) {
                                        ' for ' + req.body.track_id});
         }
     });
+};
+
+/**
+ * Generates a random string containing numbers and letters
+ *
+ * @param  {number} length The length of the string
+ * @return {string} The generated string
+ */
+var _generateRandomString = function(length) {
+    var text = '';
+    var possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    for (var i = 0; i < length; i++) {
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+    }
+    return text;
 };

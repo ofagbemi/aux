@@ -101,9 +101,8 @@ app.post('/add_track_for_voting', aux.add_track_for_voting);
 app.post('/vote', aux.vote);
 
 
-var spotify = require('./routes/spotify');
-app.get('/login', spotify.login);
-app.get('/auth', spotify.auth);
+app.get('/login', aux.login);
+app.get('/auth', aux.auth);
 
 var port = Number(process.env.PORT || 5000);
 app.listen(port);
