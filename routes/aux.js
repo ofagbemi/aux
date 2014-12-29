@@ -490,13 +490,13 @@ exports.add_track_for_voting = function(req, res) {
  * Assigns a vote to a track from the specified user
  * 
  * @param {object} params A hash that should contain groupId, trackId, and
- *                        voterId
+ * voterId
  * @param {boolean} [params.ignorePast] Vote even if the user has already
- *                                      voted for this track
+ * voted for this track
  * @param {Number} [params.numVotes] number of votes to add
  * 
  * @param {function} [callback] Callback passed as the onComplete parameter
- *                              to a call to Firebase.transaction()
+ * to a call to Firebase.transaction()
  */
 var vote = function(params, callback) {
     var groupId = params.groupId,
