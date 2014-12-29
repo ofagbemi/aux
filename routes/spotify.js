@@ -216,7 +216,7 @@ exports.search = search;
  * @param string accessToken
  * @param function [callback]
  */
-exports.add_track_to_playlist = function(userId, playlistId, trackId, accessToken, callback) {
+exports.addTrackToPlaylist = function(userId, playlistId, trackId, accessToken, callback) {
     var options = {
         url: 'https://api.spotify.com/v1/users/' + userId + '/playlists/' +
              playlistId + '/tracks?uris=' + trackId,
