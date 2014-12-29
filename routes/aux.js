@@ -342,12 +342,14 @@ var addLeaderToPlaylist = function(groupId, complete) {
     complete = complete || function() {return undefined;};
     var groupRef = firebaseRef.child('groups').child(groupId);
     groupRef.once('value', function(snapshot) {
-        var group = snapshot.val();
         
-        // First, we determine which track was the winner
-        var winningTrack = undefined;
-        var winningTrackKey = undefined;
-        var winningTrackNumVotes = -1;
+        // Start by getting the group from Firebase. Then we'll run through
+        // its voting tracks to determine which is the winner
+        var group = snapshot.val(),
+            winningTrack = undefined,
+            winningTrackKey = undefined,
+            winningTrackNumVotes = -1;
+        
         for(var key in group.voting_tracks) {
             var numVotes = group.voting_tracks[key].num_votes || 0;
             if(numVotes > winningTrackNumVotes) {
@@ -356,13 +358,12 @@ var addLeaderToPlaylist = function(groupId, complete) {
                 winningTrackNumVotes = numVotes;
             }
         }
-        
         if(!winningTrackKey) {
             complete('No winning track found');
             return;
         }
         
-        // Now we'll remove that track from the voting tracks
+        // Remove the winner from the group's list of voting tracks
         var votingTracksRef = groupRef.child('voting_tracks');
         votingTracksRef.child(winningTrackKey).remove(function(err) {
             if(err) {
@@ -370,6 +371,8 @@ var addLeaderToPlaylist = function(groupId, complete) {
                 return;
             }
             
+            // Update voting tracks length and, if there are still more tracks
+            // left, kick off the next voting round
             var lengthRef = votingTracksRef.child('length');
             lengthRef.once('value', function(snapshot) {
                 // If there are still tracks left to vote on, then move on to
@@ -389,44 +392,57 @@ var addLeaderToPlaylist = function(groupId, complete) {
                 playlistId = group.playlist_id,
                 trackUri = winningTrack.uri;
             
+            /**
+             * Called when the POST to Spotify's API finishes
+             *
+             * @param err
+             * @param response
+             * @param body
+             */
+            var onComplete = function(err, response, body) {
+                if(err) {
+                    console.log('couldn\'t add track to playlist', err);
+                    complete(err);
+                } else {
+                    console.log('Adding track...');
+                    console.log('added track ' + trackUri + ' to playlist ' + playlistId);
+                    complete();
+                }
+            };
             
-            groupRef.once('value', function(snapshot) {
-                var val = snapshot.val();
-                var accessToken = val.access_token;
-                spotify.add_track_to_playlist(
-                    userId, playlistId, trackUri, accessToken,
-                    function(err, response, body) {
-                        
-                        if(err) {
-                            console.log('couldn\'t add track to playlist', err);
-                            complete(err);
-                        } else if(response.statusCode === 401) {
-                            
-                            // Refresh token block, TODO: clean this up
-                            spotify.refreshToken({
-                                refresh_token: val.refresh_token,
-                            }, function(err, newAccessToken) {
-                                console.log('updating access token');
-                                updateAccessToken(groupId, newAccessToken);
-                                spotify.add_track_to_playlist(userId, playlistId, trackUri, newAccessToken,
-                                    function(err, response, body) {
-                                        if(err) {
-                                            console.log('couldn\'t add track to playlist', err);
-                                            complete(err);
-                                        } else {
-                                            console.log('Adding track...');
-                                            console.log('added track ' + trackUri + ' to playlist ' + playlistId);
-                                            complete();
-                                        }
-                                });
-                            });
-                                
-                        } else {
-                            console.log('Adding track...');
-                            console.log('added track ' + trackUri + ' to playlist ' + playlistId);
-                            complete();
-                        }
-                });
+            /**
+             * We'll call this if we hit a 401--this probably means that our
+             * access token has expired. This handles the necessary update
+             * to the group access token and tries to save the track to the
+             * playlist again.
+             *
+             * @param err
+             * @param {string} newAccessToken
+             */
+            var onTokenRefresh = function(err, newAccessToken) {
+                if(err) {
+                    onComplete('couldn\'t refresh access token ' + err);
+                    return;
+                }
+                
+                console.log('updating access token');
+                updateAccessToken(groupId, newAccessToken);
+                spotify.addTrackToPlaylist(userId, playlistId, trackUri, newAccessToken, onComplete);
+            };
+            
+            var accessToken = group.access_token;
+            spotify.addTrackToPlaylist(
+                userId, playlistId, trackUri, accessToken,
+                function(err, response, body) {
+                    // If we get a 401, then the access token probably
+                    // needs to be refreshed
+                    if(response.statusCode === 401) {
+                        spotify.refreshToken(group.refresh_token, onTokenRefresh);
+                    } else {
+                        // Otherwise, just move on to the regular
+                        // onComplete call
+                        onComplete(err, response, body);
+                    }
             });
         });
     });
