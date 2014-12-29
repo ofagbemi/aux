@@ -1,7 +1,7 @@
-.group.swap-page .background {
+.group.swap-page > .background {
   width: 120%;
   height: 120%;
-  position: absolute;
+  position: fixed;
   top: -10%;
   background-color: black;
   left: -10%;
@@ -83,28 +83,8 @@ header h2 {
 
 .window-select {
   height: 40px;
-  /* background-color: #388dca; */
   position: relative;
   text-align: center;
-  
-  @include box-shadow(inset 0 4px 4px rgba(95, 95, 95, 0.01));
-}
-
-.window-select .time-indicator {
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
-  width: 100%;
-}
-
-.window-select .time-indicator .bar {
-  width: 0;
-  /* height: 100%; */
-  background-color: #51be51;
-  
-  @include box-shadow(inset 0px -2px rgba(42, 42, 42, 0.08));
-  @include transition(width 0.2s);
 }
 
 .window-select .buttons {

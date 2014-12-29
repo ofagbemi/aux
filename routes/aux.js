@@ -156,6 +156,8 @@ exports.create_group = function(req, res) {
                 var firebaseGroup = {
                     owner_id: user_id,
                     playlist_id: playlist.id,
+                    access_token: req.session.access_token,
+                    refresh_token: req.session.refresh_token,
                 };
 
                 // store the group object in firebase
@@ -168,7 +170,7 @@ exports.create_group = function(req, res) {
         } else {
             console.log('There was a problem creating the group...');
             console.log(err, response.statusCode);
-            res.status(500).send(err + ' ' + response + ' ' + body);
+            res.sendStatus(500).send(err + ' ' + response + ' ' + body);
         }
     });
 };
@@ -252,11 +254,46 @@ exports.find_nearby_groups = function(req, res) {
         .exec(sendData);
 };
 
+/**
+ * Starts a new round for the passed in group
+ *
+ * @param {string} groupId
+ */
+var startNextRound = function(groupId) {
+    var groupRef = firebaseRef.child('groups').child(groupId),
+        timeLeftRef = groupRef.child('time_left'),
+        roundNumRef = groupRef.child('round_num');
+    
+    roundNumRef.transaction(function(currentRoundNum) {
+        return (currentRoundNum || 0) + 1;
+    });
+    
+    var interval = setInterval(function() {
+        timeLeftRef.transaction(function(currentTime) {
+            if(!currentTime) {
+                // If the timer isn't set, set it
+                return voteWaitTime;
+            } else if(currentTime <= 1000) {
+                // If we're about to run the timer down, stop, and add the
+                // leader to the playlist
+                clearInterval(interval);
+                addLeaderToPlaylist(groupId);
+                
+                // time's up, return 0
+                return 0;
+            } else {
+                // Otherwise, update the timer
+                return currentTime - 1000;
+            }
+        });
+    }, 1000);
+};
+
 exports.add_track_for_voting = function(req, res) {
-    var track = JSON.parse(req.body.track);
-    var trackId = track.id;
-    var groupId = req.body.group_id;
-    var voterId = req.session.user_id;
+    var track = JSON.parse(req.body.track),
+        trackId = track.id,
+        groupId = req.body.group_id,
+        voterId = req.session.user_id;
     
     var groupRef = firebaseRef.child('groups').child(groupId);
     
@@ -267,28 +304,16 @@ exports.add_track_for_voting = function(req, res) {
     
     // If this is the first track we're adding, we want to go ahead and
     // kick off the timer. Otherwise, assume the timer's already running
-    votingTracksRef.child('length').transaction(function(currentValue) {
-        if(!currentValue) {
-            // if the length is either 0 or undefined, go ahead and start
-            // the timer and set it to 1
-            var timeLeftRef = groupRef.child('time_left');
-            // decrement time left every second, starting from voteWatiTime
-            var interval = setInterval(function() {
-                timeLeftRef.transaction(function(current) {
-                    // if there's no time on the clock, get it running
-                    if(current === undefined || current === null) return parseInt(voteWaitTime);
-                    // When time's up, we clear the interval and set the reference's
-                    // value to 0. We catch this value on the front-end, and
-                    // send a new request to the add_track_to_playlist handler
-                    if(current <= 0) {
-                        clearInterval(interval);
-                        return 0;
-                    }
-                    return current - 1000;
-                });
-            }, 1000);
+    var lengthRef = votingTracksRef.child('length');
+    lengthRef.once('value', function(snapshot) {
+        // if the length is either 0 or undefined, go ahead and start
+        // the timer
+        if(!snapshot.val()) {
+            startNextRound(groupId);
         }
-        return (currentValue || 0) + 1;
+        lengthRef.transaction(function(currentValue) {
+            return (currentValue || 0) + 1;
+        });
     });
   
     vote({
@@ -308,17 +333,23 @@ exports.add_track_for_voting = function(req, res) {
 
 /**
  * Adds a track to a the playlist that belongs to a given group.
+ *
+ * @param {string} groupId
+ * @param {function} [complete]
  */
-exports.add_leader_to_playlist = function(req, res) {
-    var groupId = req.body.group_id;
+var addLeaderToPlaylist = function(groupId, complete) {
+    
+    complete = complete || function() {return undefined;};
     var groupRef = firebaseRef.child('groups').child(groupId);
     groupRef.once('value', function(snapshot) {
-        var group = snapshot.val();
         
-        // First, we determine which track was the winner
-        var winningTrack = undefined;
-        var winningTrackKey = undefined;
-        var winningTrackNumVotes = -1;
+        // Start by getting the group from Firebase. Then we'll run through
+        // its voting tracks to determine which is the winner
+        var group = snapshot.val(),
+            winningTrack = undefined,
+            winningTrackKey = undefined,
+            winningTrackNumVotes = -1;
+        
         for(var key in group.voting_tracks) {
             var numVotes = group.voting_tracks[key].num_votes || 0;
             if(numVotes > winningTrackNumVotes) {
@@ -327,37 +358,105 @@ exports.add_leader_to_playlist = function(req, res) {
                 winningTrackNumVotes = numVotes;
             }
         }
-        
         if(!winningTrackKey) {
-            res.status(404).send('No winning track found');
+            complete('No winning track found');
             return;
         }
-        // Now we'll remove that track from the voting tracks
-        groupRef.child('voting_tracks').child(winningTrackKey).remove(function(err) {
+        
+        // Remove the winner from the group's list of voting tracks
+        var votingTracksRef = groupRef.child('voting_tracks');
+        votingTracksRef.child(winningTrackKey).remove(function(err) {
             if(err) {
-                res.status(500).json({err: err});
+                complete(err);
                 return;
             }
             
+            // Update voting tracks length and, if there are still more tracks
+            // left, kick off the next voting round
+            var lengthRef = votingTracksRef.child('length');
+            lengthRef.once('value', function(snapshot) {
+                // If there are still tracks left to vote on, then move on to
+                // the next voting round
+                if(snapshot.val() > 1) {
+                    startNextRound(groupId);
+                }
+                
+                // Set off a transaction to decrement the length
+                lengthRef.transaction(function(currentLength) {
+                    currentLength--;
+                    return currentLength;
+                });
+            });
+            
             var userId = group.owner_id,
                 playlistId = group.playlist_id,
-                trackUri = winningTrack.uri,
-                accessToken = req.session.access_token;
+                trackUri = winningTrack.uri;
             
-            spotify.add_track_to_playlist(
+            /**
+             * Called when the POST to Spotify's API finishes
+             *
+             * @param err
+             * @param response
+             * @param body
+             */
+            var onComplete = function(err, response, body) {
+                if(err) {
+                    console.log('couldn\'t add track to playlist', err);
+                    complete(err);
+                } else {
+                    console.log('Adding track...');
+                    console.log('added track ' + trackUri + ' to playlist ' + playlistId);
+                    complete();
+                }
+            };
+            
+            /**
+             * We'll call this if we hit a 401--this probably means that our
+             * access token has expired. This handles the necessary update
+             * to the group access token and tries to save the track to the
+             * playlist again.
+             *
+             * @param err
+             * @param {string} newAccessToken
+             */
+            var onTokenRefresh = function(err, newAccessToken) {
+                if(err) {
+                    onComplete('couldn\'t refresh access token ' + err);
+                    return;
+                }
+                
+                console.log('updating access token');
+                updateAccessToken(groupId, newAccessToken);
+                spotify.addTrackToPlaylist(userId, playlistId, trackUri, newAccessToken, onComplete);
+            };
+            
+            var accessToken = group.access_token;
+            spotify.addTrackToPlaylist(
                 userId, playlistId, trackUri, accessToken,
                 function(err, response, body) {
-                    if(err) {
-                        console.log('couldn\'t add track to playlist', err);
-                        res.status(500).json({err: err});
+                    // If we get a 401, then the access token probably
+                    // needs to be refreshed
+                    if(response.statusCode === 401) {
+                        spotify.refreshToken(group.refresh_token, onTokenRefresh);
                     } else {
-                        console.log('Adding track...');
-                        var msg = 'added track ' + trackUri + ' to playlist ' + playlistId
-                        res.status(200).json({msg: msg});
+                        // Otherwise, just move on to the regular
+                        // onComplete call
+                        onComplete(err, response, body);
                     }
             });
         });
     });
+};
+
+/**
+ * Updates the current access token
+ *
+ * @param {string} groupId
+ * @param {string} accessToken
+ */
+var updateAccessToken = function(groupId, accessToken) {
+    var groupRef = firebaseRef.child('groups').child(groupId);
+    groupRef.child('access_token').set(accessToken);
 };
 
 /**
@@ -369,7 +468,7 @@ exports.add_leader_to_playlist = function(req, res) {
  *                                                already voted for this track
  *                            Number numVotes number of votes to add
              
- * @param {Function} [callback] Callback passed as the onComplete parameter to a call to Firebase.transaction()
+ * @param {function} [callback] Callback passed as the onComplete parameter to a call to Firebase.transaction()
  */
 var vote = function(params, callback) {
     var groupId = params.groupId,

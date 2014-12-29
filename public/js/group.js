@@ -78,6 +78,15 @@ $(document).ready(function() {
         section
             .addClass('active')
             .addClass('slide-in-' + dir).show();
+        
+        // If we're showing the vote section, then we
+        // want to bring up the winner's circle
+        if(forSection === 'vote') {
+            groupFns.showWinnersCircle();
+        } else {
+            // Otherwise, we'll hide it, just in case it was up
+            groupFns.hideWinnersCircle();
+        }
     });
     
     /* listening */
@@ -537,18 +546,39 @@ $(document).ready(function() {
     var numTotalVotes = 0,
         firebase = new Firebase('https://blinding-fire-3652.firebaseio.com/'),
         groupRef = firebase.child('groups').child(groupId),
-        tracksRef = groupRef.child('voting_tracks');
+        tracksRef = groupRef.child('voting_tracks'),
+        votingTrackObjects = [];
     
+    groupFns.getWinningTrackJson = function() {
+        var winningNumVotes = -1,
+            winningTrack = undefined;
+        for(var key in votingTrackObjects) {
+            if((votingTrackObjects[key].num_votes || 0) > winningNumVotes) {
+                winningTrack = votingTrackObjects[key];
+            }
+        }
+        return winningTrack;
+    };
+    
+    var mostVotes = 0;
     tracksRef.on('child_added', function(snapshot) {
-        // add to numTotalVotes
         var val = snapshot.val();
         // quit if some child besides the track hash was added
         if(typeof(val) !== 'object') {return;}
         
+        // update the number of total votes and add this track's
+        // JSON to the store of voting tracks
         numTotalVotes += val.num_votes;
+        votingTrackObjects[val.id] = val;
+        
+        if(val.num_votes > mostVotes) {
+            mostVotes = val.num_votes;
+            groupFns.setWinnersCircle(val);
+        }
+        
         // hide loading wheel if it's up
         $('.vote-wrapper .loading-icon').hide();
-        // send a get request to render a voting-object for this track
+        // send a get request to render a voting object for this track
         $.ajax({
             type: 'GET',
             url: '/render_voting_track',
@@ -562,18 +592,45 @@ $(document).ready(function() {
         });
     });
     
-    tracksRef.on('child_changed', function(snapshot, prevSnapshot) {
+    tracksRef.on('child_removed', function(snapshot) {
         var val = snapshot.val(),
-            numVotes = val.num_votes,
+            id = val.id;
+        
+        delete votingTrackObjects[id];
+        $('.voting-object[track-id="' + id + '"]').remove();
+        
+        // reset the winner's circle if there's a new winner
+        var winner = groupFns.getWinningTrackJson();
+        if(winner) {
+            groupFns.setWinnersCircle(groupFns.getWinningTrackJson());
+        } else {
+            // if there aren't any tracks left, hide the winner's circle
+            groupFns.hideWinnersCircle();
+        }
+    });
+    
+    tracksRef.on('child_changed', function(snapshot, prevSnapshot) {
+        
+        // We'll ignore the child_changed call for updates to length
+        if(snapshot.key() === 'length') {
+            return;
+        }
+        
+        var val = snapshot.val(),
             trackId = val.id,
-            trackElem = $('.track[track-id="' + trackId + '"]'),
-            numVotesElem = trackElem.find('.num-votes');
+            numVotes = val.num_votes,
+            oldNumVotes = votingTrackObjects[trackId].num_votes,
+            trackElem = $('.voting-object.track[track-id="' + trackId + '"]');
+        
+        // update this track's record in the voting tracks store
+        votingTrackObjects[trackId] = val;
+        
+        // set the winner's circle to the current winner
+        groupFns.setWinnersCircle(groupFns.getWinningTrackJson());
         
         // Called immediately if everything can be found okay. Otherwise,
         // it's only called once the num-votes element has been loaded
         var setUpVoteElems = function() {
-            var oldNumVotes = numVotesElem.text();
-            numVotesElem.text(numVotes);
             numTotalVotes += (numVotes - oldNumVotes);
             groupFns.adjustVoteIndicators();
             groupFns.moveVotingObjects(true);
@@ -585,15 +642,14 @@ $(document).ready(function() {
             }
         };
         
-        // If the num-votes element couldn't be found, it's likely that it just
+        // If the track element couldn't be found, it's likely that it just
         // hasn't been added to the DOM by the time the child_changed handler
         // is called. We set an interval here that checks repeatedly for the DOM
         // element until it's loaded
-        if(numVotesElem.length === 0) {
+        if(trackElem.length === 0) {
             var interval = setInterval(function() {
                 trackElem = $('.track[track-id="' + trackId + '"]');
-                numVotesElem = trackElem.find('.num-votes');
-                if(numVotesElem.length === 0) {return;}
+                if(trackElem.length === 0) {return;}
                 clearInterval(interval);
                 setUpVoteElems();
             }, 200);
@@ -607,6 +663,78 @@ $(document).ready(function() {
             setUpVoteElems();
         }
     });
+    
+    /**
+     * Fills the winner's circle element with the data in trackJson
+     *
+     * @param Object trackJson JSON object for track to render
+     */
+    groupFns.setWinnersCircle = function(trackJson) {
+        if(!trackJson) {
+            return;
+        }
+        
+        var name = trackJson.name,
+            artists = trackJson.artists,
+            img = trackJson.album.images[0].url,
+            
+            // There's a chance that the number of votes is undefined at this
+            // point in time, though it'll probably be updated again before
+            // this matters anyway
+            numVotes = trackJson.num_votes || 0,
+            
+            winnersCircleElem = $('.winners-circle'),
+            iconElem = winnersCircleElem.find('.icon'),
+            infoElem = winnersCircleElem.find('.info');
+        
+        iconElem.css({
+            backgroundImage: 'url("' + img + '")'
+        });
+        
+        infoElem.find('.track').text(name);
+        var names = [];
+        for(var i = 0; i < artists.length; i++) {
+            names.push(artists[i].name);
+        }
+        infoElem.find('.artist').text(names.join(', '));
+        infoElem.find('.num-votes').text(numVotes);
+        infoElem.find('.vote-text').text(parseInt(numVotes) === 1 ? 'vote' : 'votes');
+    };
+    
+    /**
+     * Shows the winner's circle
+     */
+    groupFns.showWinnersCircle = function() {
+        var winnersCircleElem = $('.winners-circle');
+        if(winnersCircleElem.is(':visible')) {
+            return;
+        }
+        winnersCircleElem
+            .css({
+                opacity: 0,
+            })
+            .velocity('slideDown')
+            .velocity({
+                opacity: 1,
+            });
+    };
+    
+    /**
+     * Hides the winner's circle
+     */
+    groupFns.hideWinnersCircle = function() {
+        var winnersCircleElem = $('.winners-circle');
+        if(!winnersCircleElem.is(':visible')) {
+            return;
+        }
+        winnersCircleElem
+            .velocity({
+                opacity: 0,
+            }).velocity('slideUp')
+            .css({
+                opacity: 1,
+            });
+    };
     
     groupFns.votingButtonClickFn = function(e) {
         e.preventDefault();
@@ -820,22 +948,13 @@ $(document).ready(function() {
     /* timer */
     var voteWaitTime = 30000;
     groupRef.child('time_left').on('value', function(snapshot) {
-        var val = snapshot.val();
-        if(val === undefined || val === null) {return;}
-        if(val <= 0) {
-            $.ajax({
-                type: 'POST',
-                url: '/add_leader_to_playlist',
-                data: {
-                    group_id: groupId,
-                },
-            }).done(function(response) {
-                // TODO: signify that the track has been added to the
-                //       playlist
-            });
-        }
-        $('.time-indicator .bar').css({
-            width: ( ( (voteWaitTime - val) / voteWaitTime ) * 100) + '%',
-        });
+        var ms = snapshot.val();
+        if(ms === undefined || ms === null) {return;}
+        var seconds = Math.floor((ms % 60000) / 1000);
+        var minutes = Math.floor(ms / 60000);
+        
+        if(seconds < 10) {seconds = '0' + seconds;}
+        var time = minutes + ':' + seconds;
+        $('.time-indicator .time').text(time);
     });
 });

@@ -85,8 +85,10 @@ exports.auth = function(req, res) {
 /**
  * Sends a new access token to the caller. Must be passed
  * a valid refresh token `refresh_token`
+ *
+ * @param {string} refresh_token
  */
-var refresh_token = function(params, callback) {
+var refreshToken = function(refresh_token, callback) {
     var authOptions = {
         url: 'https://accounts.spotify.com/api/token',
         headers: {'Authorization': 'Basic ' + 
@@ -94,25 +96,23 @@ var refresh_token = function(params, callback) {
                                          .toString('base64'))},
         form: {
             grant_type: 'refresh_token',
-            refresh_token: params.refresh_token,
+            refresh_token: refresh_token,
         },
-        
         json: true,
-    }
+    };
     
     request.post(authOptions, function(err, response, body) {
         if(!err && response.statusCode === 200) {
             var accessToken = body.access_token;
-            params.req.session.access_token = accessToken;
             callback(err, accessToken);
         } else {
-            console.log('bad', response.statusCode, err, authOptions);
+            console.log('failed to refresh access token', response.statusCode, err, authOptions);
             callback(err, undefined);
         }
     });
 };
 
-exports.refresh_token = refresh_token;
+exports.refreshToken = refreshToken;
 
 /**
  * Passes user info to callback based on access_token passed
@@ -187,10 +187,7 @@ var search = function(params, callback) {
         if(response && response.statusCode === 401 &&
            !params.req.session.failedTokenRefresh) {
             params.req.session.failedTokenRefresh = true;
-            refresh_token({
-                req: params.req,
-                refresh_token: params.req.session.refresh_token
-            }, function(err, access_token) {
+            refreshToken(params.req.session.refresh_token, function(err, access_token) {
                 if(!err) {
                     console.log('old token', params.access_token);
                     console.log('new token', access_token);
@@ -217,7 +214,7 @@ exports.search = search;
  * @param string accessToken
  * @param function [callback]
  */
-exports.add_track_to_playlist = function(userId, playlistId, trackId, accessToken, callback) {
+exports.addTrackToPlaylist = function(userId, playlistId, trackId, accessToken, callback) {
     var options = {
         url: 'https://api.spotify.com/v1/users/' + userId + '/playlists/' +
              playlistId + '/tracks?uris=' + trackId,

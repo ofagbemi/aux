@@ -1,0 +1,76 @@
+#voting-tracks {
+  padding: 0 24px;
+  margin-top: 24px;
+}
+
+#voting-tracks .voting-list {
+    position: relative;
+}
+
+.winners-circle {
+  text-align: center;
+  margin-bottom: 24px;
+  padding: 0 48px;
+  
+  .icon {
+    width: 200px;
+    height: 200px;
+    box-sizing: border-box;
+    display: inline-block;
+    background-size: cover;
+    background-position: center;
+    margin: 28px 0 18px 0;
+    border-radius: 4px;
+  }
+  
+  .info {
+    color: rgba(255, 255, 255, 0.88);
+    text-shadow: 0 0 2px rgba(0, 0, 0, 0.14);
+    text-align: center;
+    font-family: 'Helvetica Neue', sans-serif;
+    
+    .track {
+      font-weight: 100;
+      letter-spacing: 2px;
+      font-size: 28px;
+      margin-bottom: 8px;
+    }
+    
+    .description {
+      font-family: 'Helvetica', 'Helvetica Neue', sans-serif;
+      font-size: 14px;
+      font-weight: 200;
+      
+      .artist {
+        color: rgba(255, 255, 255, 0.88);
+        font-family: 'Helvetica Neue', sans-serif;
+        font-weight: 100;
+        letter-spacing: 1px;
+      }
+    }
+    
+    .votes {
+      margin: 18px 0 0 0;
+      font-weight: 200;
+      
+      .num-votes {
+        font-weight: 200;
+        font-size: 22px;
+      }
+    }
+  }
+}
+
+.time-indicator {
+  width: 100%;
+  margin: 8px 0;
+  text-align: center;
+}
+
+.time-indicator .time {
+  color: rgba(255, 255, 255, 0.88);
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.14);
+  font-weight: 200;
+  font-size: 14px;
+  font-family: 'Helvetica', sans-serif;
+}
