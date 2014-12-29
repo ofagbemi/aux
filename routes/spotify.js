@@ -86,7 +86,7 @@ exports.auth = function(req, res) {
  * Sends a new access token to the caller. Must be passed
  * a valid refresh token `refresh_token`
  */
-var refresh_token = function(params, callback) {
+var refreshToken = function(params, callback) {
     var authOptions = {
         url: 'https://accounts.spotify.com/api/token',
         headers: {'Authorization': 'Basic ' + 
@@ -103,7 +103,6 @@ var refresh_token = function(params, callback) {
     request.post(authOptions, function(err, response, body) {
         if(!err && response.statusCode === 200) {
             var accessToken = body.access_token;
-            params.req.session.access_token = accessToken;
             callback(err, accessToken);
         } else {
             console.log('bad', response.statusCode, err, authOptions);
@@ -112,7 +111,7 @@ var refresh_token = function(params, callback) {
     });
 };
 
-exports.refresh_token = refresh_token;
+exports.refreshToken = refreshToken;
 
 /**
  * Passes user info to callback based on access_token passed
@@ -187,7 +186,7 @@ var search = function(params, callback) {
         if(response && response.statusCode === 401 &&
            !params.req.session.failedTokenRefresh) {
             params.req.session.failedTokenRefresh = true;
-            refresh_token({
+            refreshToken({
                 req: params.req,
                 refresh_token: params.req.session.refresh_token
             }, function(err, access_token) {

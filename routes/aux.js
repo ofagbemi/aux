@@ -389,14 +389,38 @@ var addLeaderToPlaylist = function(groupId, complete) {
                 playlistId = group.playlist_id,
                 trackUri = winningTrack.uri;
             
-            groupRef.child('access_token').once('value', function(accessTokenSnapshot) {
-                var accessToken = accessTokenSnapshot.val();
+            
+            groupRef.once('value', function(snapshot) {
+                var val = snapshot.val();
+                var accessToken = val.access_token;
                 spotify.add_track_to_playlist(
                     userId, playlistId, trackUri, accessToken,
                     function(err, response, body) {
+                        
                         if(err) {
                             console.log('couldn\'t add track to playlist', err);
                             complete(err);
+                        } else if(response.statusCode === 401) {
+                            
+                            // Refresh token block, TODO: clean this up
+                            spotify.refreshToken({
+                                refresh_token: val.refresh_token,
+                            }, function(err, newAccessToken) {
+                                console.log('updating access token');
+                                updateAccessToken(groupId, newAccessToken);
+                                spotify.add_track_to_playlist(userId, playlistId, trackUri, newAccessToken,
+                                    function(err, response, body) {
+                                        if(err) {
+                                            console.log('couldn\'t add track to playlist', err);
+                                            complete(err);
+                                        } else {
+                                            console.log('Adding track...');
+                                            console.log('added track ' + trackUri + ' to playlist ' + playlistId);
+                                            complete();
+                                        }
+                                });
+                            });
+                                
                         } else {
                             console.log('Adding track...');
                             console.log('added track ' + trackUri + ' to playlist ' + playlistId);
@@ -406,6 +430,17 @@ var addLeaderToPlaylist = function(groupId, complete) {
             });
         });
     });
+};
+
+/**
+ * Updates the current access token
+ *
+ * @param {string} groupId
+ * @param {string} accessToken
+ */
+var updateAccessToken = function(groupId, accessToken) {
+    var groupRef = firebaseRef.child('groups').child(groupId);
+    groupRef.child('access_token').set(accessToken);
 };
 
 /**
