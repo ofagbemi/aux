@@ -369,10 +369,8 @@ exports.render_voting_track = function(req, res) {
 /**
  * Finds groups near the specified location
  * 
- * latitude : latitude of the location
- * longitude: longitude of the location
- * distance : Sets a radius around the group's approximate position.
- *            Defaults to 1,000m
+ * @param req
+ * @param res
  */
 exports.find_nearby_groups = function(req, res) {
     var renderHtml = req.query.html === 'true' ||
@@ -381,7 +379,7 @@ exports.find_nearby_groups = function(req, res) {
     var latitude  = Number(req.query.latitude),
         longitude = Number(req.query.longitude);
     
-    var distance = Number(req.query.distance || 500); // default to 1,000 m
+    var distance = Number(req.query.distance || 1000); // default to 1,000 m
     var sendData = function(err, data) {
         if(err) {
             console.log('error finding groups', err);
