@@ -299,6 +299,12 @@ var generateUserId = function(group_id) {
     return crypto.createHash('md5').update(group_id + new Date()).digest('hex');
 }
 
+/**
+ * Renders a group page
+ *
+ * @param req
+ * @param res
+ */
 exports.show_group = function(req, res) {
     var layout = req.query.layout !== 'false' &&
                  req.query.layout !== false;
@@ -433,6 +439,13 @@ var startNextRound = function(groupId) {
     }, 1000);
 };
 
+/**
+ * Adds a track to a specified group's voting tracks and, if the track
+ * was previously empty, kicks off the group's voting timer
+ *
+ * @param req
+ * @param res
+ */
 exports.add_track_for_voting = function(req, res) {
     var track = JSON.parse(req.body.track),
         trackId = track.id,
@@ -478,13 +491,14 @@ exports.add_track_for_voting = function(req, res) {
 /**
  * Assigns a vote to a track from the specified user
  * 
- * @param {object} params A hash that should contain groupId, trackId, and voterId
- *                        Optional parameters:
- *                            boolean ignorePast Vote even if the user has
- *                                                already voted for this track
- *                            Number numVotes number of votes to add
+ * @param {object} params A hash that should contain groupId, trackId, and
+ *                        voterId
+ * @param {boolean} [params.ignorePast] Vote even if the user has already
+ *                                      voted for this track
+ * @param {Number} [params.numVotes] number of votes to add
  * 
- * @param {function} [callback] Callback passed as the onComplete parameter to a call to Firebase.transaction()
+ * @param {function} [callback] Callback passed as the onComplete parameter
+ *                              to a call to Firebase.transaction()
  */
 var vote = function(params, callback) {
     var groupId = params.groupId,
