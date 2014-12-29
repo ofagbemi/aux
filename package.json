@@ -18,7 +18,8 @@
     "mongoose": "^3.8.19",
     "node-sass": "^1.2.3",
     "node-sass-middleware": "^0.4.0",
-    "request": "^2.48.0"
+    "request": "^2.48.0",
+    "spotify-web-api-node": "^1.2.1"
   },
   "devDependencies": {},
   "scripts": {

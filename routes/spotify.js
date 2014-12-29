@@ -1,85 +1,63 @@
 var querystring = require('querystring');
 var request     = require('request');
+var SpotifyAPI  = require('spotify-web-api-node');
 
-var clientId     = 'dd954dc18db547cfb93af5f71da7936f';
-var clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
-var redirectUri  = 'http://localhost:5000/auth';
+var cred = {
+    clientId:     'dd954dc18db547cfb93af5f71da7936f',
+    clientSecret:  process.env.SPOTIFY_CLIENT_SECRET,
+    redirectUri:  'http://localhost:5000/auth'
+},
+    scopes = ['user-read-private', 'user-read-email',
+                  'playlist-modify-public', 'playlist-modify-private'],
+    stateKey = 'spotify_auth_state';
 
-var stateKey = 'spotify_auth_state';
+var spotify = new SpotifyAPI(cred);
 
 /**
- * Called when it's time to actually log the user into Spotify. Redirects
- * to Spotify's authorize endpoint, which then redirects to the auth callback
+ * Called when it's time to actually log the user into Spotify.
+ * Redirects to Spotify's authorize endpoint, which then redirects
+ * to the auth callback
+ *
+ * @param req
+ * @param res
  */
 exports.login = function(req, res) {
-    var state = generateRandomString(16);
-    res.cookie(stateKey, state);
     
-    var scope = 'user-read-private user-read-email ' +
-                'playlist-modify-public playlist-modify-private';
-    res.redirect('https://accounts.spotify.com/authorize?' +
-        querystring.stringify({
-            response_type: 'code',
-            client_id: clientId,
-            scope: scope,
-            redirect_uri: redirectUri,
-            state: state,
-        }));
+    var state = generateRandomString(16);
+    
+    // store the state so we can check it in the auth endpoint
+    res.cookie(stateKey, state);
+    var authUrl = spotify.createAuthorizeURL(scopes, state);
+    res.redirect(authUrl);
 };
 
 /**
  * Authenticates the user. Check's against stored browser
  * state cookie and sends final post request to Spotify's
  * profile endpoint
+ *
+ * @param req
+ * @param res
  */
 exports.auth = function(req, res) {
-    var code = req.query.code || null;
-    var state = req.query.state || null;
-    var storedState = req.cookies ? req.cookies[stateKey] : null;
+    var state = req.query.state || null,
+        code = req.query.code || null,
+        storedState = req.cookies ? req.cookies[stateKey] : null;
     
+    // Check the state
     if(state === null || state !== storedState) {
-        res.send(req.cookies + ' bad state ' + state + ' ' + storedState);
-    } else {
-        res.clearCookie(stateKey);
-        var authOptions = {
-            url: 'https://accounts.spotify.com/api/token',
-            form: {
-                code: code,
-                redirect_uri: redirectUri,
-                grant_type: 'authorization_code',
-            },
-            headers: {
-                'Authorization': 'Basic ' + (new Buffer(clientId + ':' +
-                                                        clientSecret).toString('base64'))
-            },
-            json: true,
-        };
-    
-        // authorize with a post request to the Spotify profile
-        // endpoint
-        request.post(authOptions, function(err, response, body) {
-            if(!err && res.statusCode === 200) {
-                
-                var accessToken = body.access_token,
-                    refreshToken = body.refresh_token;
-
-                req.session.access_token = accessToken;
-                req.session.refresh_token = refreshToken;
-                get_user_info({access_token: accessToken},
-                                   function(err, response, body) {
-                    if(!err && response.statusCode === 200) {
-                        req.session.user_id = body.id;
-                        console.log('authentication user ', req.session.user_id);
-                        res.redirect('/');
-                    } else {
-                        res.send(500, err, response.statusCode);
-                    }
-                });
-            } else {
-                res.send('bad ' + err + ' ' + res.statusCode);
-            }
-        });
+        res.statusCode(403).send('bad state');
+        return;
     }
+    
+    spotify.authorizationCodeGrant(code).then(function(data) {
+        req.session.access_token = data.access_token;
+        req.session.refresh_token = data.refresh_token;
+        res.redirect('/');
+    }, function(err) {
+        console.log('error getting access token:', err);
+        res.statusCode(500).send('error getting access token: ' + err);
+    });
 };
 
 /**
