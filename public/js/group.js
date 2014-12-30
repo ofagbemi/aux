@@ -25,26 +25,19 @@ $(document).ready(function() {
         }
         
         // Get button that was previously selected, make it inactive,
-        // make the button that's been clicked active, and slide the
-        // pointer underneath it
-        var oldButton = $('.window-select .active.button');
+        // make the button that's been clicked active
+        var $oldButton = $('.window-select .active.button');
         var left = parseInt($(this).offset().left);
-        oldButton.removeClass('active');
+        $oldButton.removeClass('active');
         $(this).addClass('active');
-        var pointer = $('.window-select .pointer');
-        pointer.css({  // slide pointer under proper button
-            left: left + 
-                   ($(this).outerWidth() - pointer.outerWidth())/2,
-        });
-        
         
         // Determine which direction to slide the new window to
-        var oldLeft = parseInt(oldButton.offset().left);
+        var oldLeft = parseInt($oldButton.offset().left);
         var dir = left < oldLeft ? 'left' : 'right';
         
-        var forSection = $(this).attr('for');
-        var section = $('section.' + forSection);
-        var currentSection = $('section.active');
+        var $forSection = $(this).attr('for');
+        var $section = $('section.' + $forSection);
+        var $currentSection = $('section.active');
         
         var afterSlideOut = function() {
             // remove the animation class to prevent the slide out animation
@@ -55,7 +48,7 @@ $(document).ready(function() {
         
         // Hide any icons so we can render them post-width calculations instead of
         // in the middle of them when they're being loaded
-        var icons = section.find('.icon').hide();
+        var $icons = $section.find('.icon').hide();
         var afterSlideIn = function() {
             // remove the animation class to prevent the slide in animation
             // from running when the section's re-rendered
@@ -63,25 +56,27 @@ $(document).ready(function() {
             util.removePrefixedEventListener(this, 'AnimationEnd', afterSlideIn);
             
             // 
-            icons.show(200);
+            $icons.show(200);
             // reset switching to false after we finish sliding in the
             // new window
             switching = false;
         }
         
-        util.addPrefixedEventListener(currentSection[0], 'AnimationEnd', afterSlideOut);
-        util.addPrefixedEventListener(section[0], 'AnimationEnd', afterSlideIn);
+        util.addPrefixedEventListener(
+            $currentSection[0], 'AnimationEnd', afterSlideOut);
+        util.addPrefixedEventListener(
+            $section[0], 'AnimationEnd', afterSlideIn);
         
-        currentSection
+        $currentSection
             .removeClass('active')
             .addClass('slide-out-' + dir);
-        section
+        $section
             .addClass('active')
             .addClass('slide-in-' + dir).show();
         
         // If we're showing the vote section, then we
         // want to bring up the winner's circle
-        if(forSection === 'vote') {
+        if($forSection === 'vote') {
             groupFns.showWinnersCircle();
         } else {
             // Otherwise, we'll hide it, just in case it was up
@@ -100,9 +95,10 @@ $(document).ready(function() {
          * @param MouseEvent e The mouse event fired by the click
          */
         submitForVotingClickFn: function(e) {
-            var trackElem = $(this).parents('.track');
-            var trackId = trackElem.attr('track-id');
+            var $trackElem = $(this).parents('.track');
+            var trackId = $trackElem.attr('track-id');
             var groupId  = $(this).parents('.group.content').attr('group-id');
+            
             $(this).addClass('loading');
             var that = this;
             $.ajax({
@@ -114,7 +110,7 @@ $(document).ready(function() {
                 },
             }).done(function(response) {
                 $(that).removeClass('loading');
-                groupFns.submitForVotingAnimationFn(trackElem, function() {
+                groupFns.submitForVotingAnimationFn($trackElem, function() {
                     $('.window-select .vote.button').click();
                     groupFns.clearSearch();
                 });
@@ -127,15 +123,15 @@ $(document).ready(function() {
          * on a voting object when it's vote function is triggered
          * successfully
          *
-         * @param HtmlElement elem The element to run the animation on. Should
-         *                         be run on a voting object element
-         * @param function [callback] Called after the animation is completed.
+         * @param {HTMLElement} elem The element to run the animation on.
+         * Should be run on a voting object element
+         * @param {function} [callback] Called after the animation is completed.
          */
         submitForVotingAnimationFn: function(elem, callback) {
             elem = $(elem);
             
-            var inner = elem.find('.inner'),
-                image = inner.find('.icon');
+            var inner = elem.find('.inner');
+            var image = inner.find('.icon');
             
             image.velocity({
                 marginTop: '25%',
@@ -156,28 +152,39 @@ $(document).ready(function() {
          * a shift from whatever it is now to the background image attribute
          * that's passed in
          *
-         * @param string backgroundImage The background-image value to set the background to
+         * @param {string} [backgroundImage=none] The background-image value to
+         * set the background to
          */
         setBackground: function(backgroundImage) {
-            var backgroundElem = $('.group.swap-page > .background')
+            backgroundImage = backgroundImage === undefined ?
+                'none' : backgroundImage;
+            var $backgroundElem = $('.group.swap-page > .background')
             var setBackground = function() {
                 util.removePrefixedEventListener(
-                    backgroundElem[0], 'TransitionEnd', setBackground);
-                backgroundElem.css({
+                    $backgroundElem[0], 'TransitionEnd', setBackground);
+                $backgroundElem.css({
                     backgroundImage: backgroundImage,
                     opacity: 1,
                 });
             };
-            util.addPrefixedEventListener(backgroundElem[0], 'TransitionEnd', setBackground);
-            backgroundElem.css('opacity', 0);
+            util.addPrefixedEventListener(
+                $backgroundElem[0], 'TransitionEnd', setBackground);
+            $backgroundElem.css('opacity', 0);
         },
+        
+        /**
+         * Touch event object passed from [Hammer.js]{http://hammerjs.github.io/}
+         * @typedef HammerEvent
+         * @see {@link http://hammerjs.github.io/api/#event-object}
+         */
         
         /**
          * Resets transforms on passed in element added by pan and swipe
          * functions
          *
-         * @param hammerEvent Hammer event object
-         * @param HtmlElem elem Element to reset
+         * @param {HammerEvent} hammerEvent Hammer event object used to
+         * determine direction to bounce toward
+         * @param {HTMLElement} elem Element to reset
          */
         resetSearchResultPosition: function(hammerEvent, elem) {
             // We prevent reset calls from being made in rapid succession
@@ -191,13 +198,13 @@ $(document).ready(function() {
             }
             groupFns.private.lastReset = time;
             
-            elem = $(elem);
+            var $elem = $(elem);
             // Is 1 if the event is toward the right and -1 otherwise
             var directionScalar = hammerEvent.deltaX > 0 ? 1 : -1;
             if(groupFns.private.swipeLocation) {
                 // send to the location it was last at before animating
                 // the next translation
-                elem.velocity(
+                $elem.velocity(
                     groupFns.private.swipeLocation, {
                         duration: 0,
                     }
@@ -206,7 +213,7 @@ $(document).ready(function() {
             
             // Animate the bounce back to the album artwork's original
             // position
-            elem.velocity({
+            $elem.velocity({
                 translateZ: '0',
                 translateX: (-directionScalar * 11) + 'px',
                 translateY: '2px',
@@ -228,11 +235,12 @@ $(document).ready(function() {
          * and slides into the next search result if the element moves past
          * an internally defined threshold
          *
-         * @param hammerEvent Hammer event object passed to pan function
-         * @param HtmlElement elem Element to slide around
+         * @param {HammerEvent} hammerEvent Hammer event object passed to pan
+         * function
+         * @param {HTMLElement} elem Element to slide around
          */
         panSearchResult: function(hammerEvent, elem) {
-            elem = $(elem);
+            var $elem = $(elem);
             var threshold = window.innerWidth / 2.5;
             
             // If the user stops here, we can either get rid of our
@@ -240,21 +248,21 @@ $(document).ready(function() {
             // swipe into the next element
             if(hammerEvent.isFinal) {
                 if(Math.abs(hammerEvent.deltaX) >= threshold) {
-                    groupFns.swipeSearchResult(hammerEvent, elem);
+                    groupFns.swipeSearchResult(hammerEvent, $elem);
                 } else {
-                    groupFns.resetSearchResultPosition(hammerEvent, elem);
+                    groupFns.resetSearchResultPosition(hammerEvent, $elem);
                 }
             } else {
-                var rotation = 11 * hammerEvent.deltaX/threshold,
-                    translateY = Math.abs(rotation),
-                    opacity = 1 - Math.abs((hammerEvent.deltaX/threshold)/8);
+                var rotation = 11 * hammerEvent.deltaX/threshold;
+                var translateY = Math.abs(rotation);
+                var opacity = 1 - Math.abs((hammerEvent.deltaX/threshold)/8);
                 
                 // Set the transforms on the album artwork
                 var transform = 'translateX(' + hammerEvent.deltaX + 'px) ' +
                                 'translateY(' +  translateY + 'px) ' +
                                 'rotate(' + rotation + 'deg)';
-                util.setPrefixedStyle(elem[0], 'transform', transform);
-                elem[0].style.opacity = opacity;
+                util.setPrefixedStyle($elem[0], 'transform', transform);
+                $elem[0].style.opacity = opacity;
                 
                 // Update the current swipe location
                 groupFns.private.swipeLocation = {
@@ -277,10 +285,10 @@ $(document).ready(function() {
          * Moves the passed in artwork element to the left and brings in
          * the next search result's card and artwork
          *
-         * @param hammerEvent Hammer event object passed to swipe or pan
-         *                    function
-         * @param HtmlElement artworkElem Artwork element for the swiped search
-         *                                result
+         * @param {HammerEvent} hammerEvent Hammer event object passed to swipe
+         * or pan function
+         * @param {HTMLElement} artworkElem Artwork element for the swiped
+         * search result
          */
         swipeSearchResult: function(hammerEvent, artworkElem) {
             // TODO: maybe queue up swipes
@@ -295,14 +303,16 @@ $(document).ready(function() {
                 return;
             }
             
-            artworkElem = $(artworkElem);
+            var $artworkElem = $(artworkElem);
+                
             // Is 1 if the event was toward the right and -1 otherwise
-            var directionScalar = hammerEvent.deltaX > 0 ? 1 : -1,
-                elemInner = artworkElem.parents('.inner'),
-                slideOrder = artworkElem.attr('slide-order'),
-                elemSpotifyObject = elemInner.parents('.spotify-object'),
-                nextSlideOrder = parseInt(slideOrder) + (-directionScalar),
-                nextArtworkElem = $('.inner .icon[slide-order="' + nextSlideOrder + '"');
+            var directionScalar = hammerEvent.deltaX > 0 ? 1 : -1;
+            var slideOrder = $artworkElem.attr('slide-order');
+            var nextSlideOrder = parseInt(slideOrder) + (-directionScalar);
+                
+            var $elemInner = $artworkElem.parents('.inner');
+            var $elemSpotifyObject = $elemInner.parents('.spotify-object');
+            var $nextArtworkElem = $('.inner .icon[slide-order="' + nextSlideOrder + '"');
             
             // Record the last swipe here to prevent the swipe of the same
             // search result from being called to soon after the last time
@@ -323,25 +333,25 @@ $(document).ready(function() {
             groupFns.private.swiping = true;
             
             // In case we're trying to slide past the last search result
-            if(nextArtworkElem.length === 0) {
-                groupFns.resetSearchResultPosition(hammerEvent, artworkElem);
+            if($nextArtworkElem.length === 0) {
+                groupFns.resetSearchResultPosition(hammerEvent, $artworkElem);
                 groupFns.private.swiping = false;
                 return;
             }
             
-            var nextElemInner = nextArtworkElem.parents('.inner'),
-                nextElemSpotifyObject = nextElemInner.parents('.spotify-object');
+            var $nextElemInner = $nextArtworkElem.parents('.inner');
+            var nextElemSpotifyObject = $nextElemInner.parents('.spotify-object');
             
             // First, if we're moving off of a swipe, we'll need to set the
             // artwork's initial position to the position it was swiped to
             if(groupFns.private.swipeLocation) {
-                artworkElem.velocity(groupFns.private.swipeLocation, {
+                $artworkElem.velocity(groupFns.private.swipeLocation, {
                     duration: 0,
                 });
             }
             
             // Animating the artwork
-            artworkElem.velocity({
+            $artworkElem.velocity({
                 translateX: (directionScalar * window.innerWidth) + 'px',
                 translateY: '11px',
                 rotateZ: (directionScalar * 11) + 'deg',
@@ -352,18 +362,18 @@ $(document).ready(function() {
             var showNextElement = function() {
                 nextElemSpotifyObject.show();
                 // Animate the next element's copy
-                nextElemInner.find('.copy').velocity({
+                $nextElemInner.find('.copy').velocity({
                     opacity: 1,
                 });
                 
                 // Before the element is displayed, we'll start transitioning
                 // into the new background artwork and to the next track
                 // indicator
-                groupFns.setBackground(nextArtworkElem.css('background-image'));
+                groupFns.setBackground($nextArtworkElem.css('background-image'));
                 groupFns.setTrackNumDisplay(nextSlideOrder);
                 
                 // And animate the next element's album artwork
-                nextArtworkElem.velocity({
+                $nextArtworkElem.velocity({
                     translateX: '0px',
                     translateY: '0px',
                     rotateZ: '0deg',
@@ -379,37 +389,45 @@ $(document).ready(function() {
                 });
             };
             
-            // Now we'll animate the inner element's content. We'll fade out the copy
-            // and slide it up before quickly replacing it with the other card
+            // Now we'll animate the inner element's content. We'll fade out
+            // the copy and slide it up before quickly replacing it with the
+            // other card
             
             // Start by prepping the next element's card
             // Set the transform property on its album artwork
-            var transform = 'translateX(' + (-directionScalar * window.innerWidth/2) + 'px) ' +
+            var transform = 'translateX(' +
+                            (-directionScalar * window.innerWidth/2) + 'px) ' +
                             'translateY(11px) ' + 
                             'rotate(' + (-directionScalar * 11) + 'deg)';
-            util.setPrefixedStyle(nextArtworkElem[0], 'transform', transform);
+            util.setPrefixedStyle($nextArtworkElem[0], 'transform', transform);
             
             // Hide its copy
-            nextElemInner.find('.copy').css({
+            $nextElemInner.find('.copy').css({
                 opacity: 0,
             });
             
             // Then animate the current element's card, hide it,
             // and show the next card
-            elemInner.find('.copy').velocity({
+            $elemInner.find('.copy').velocity({
                 opacity: 0
             }, {
                 complete: function() {
-                    elemSpotifyObject.hide();
+                    $elemSpotifyObject.hide();
                     showNextElement();
                 },
             });
         },
-      
+        
+        /**
+         * Sets the search view to display the track number for the given slide
+         * order
+         *
+         * @param {number} slideOrder
+         */
         setTrackNumDisplay: function(slideOrder) {
-            var trackIndicators = $('.track-indicators');
-            trackIndicators.find('.active').removeClass('active');
-            trackIndicators.find(
+            var $trackIndicators = $('.track-indicators');
+            $trackIndicators.find('.active').removeClass('active');
+            $trackIndicators.find(
                 '.track-indicator[slide-order="' + slideOrder + '"]'
             ).addClass('active');
             
@@ -417,10 +435,8 @@ $(document).ready(function() {
         },
     };
 
-    /**
-     * Makes the AJAX call for spotify search results and renders them
-     * when they're received.
-     */
+    // Makes the AJAX call for spotify search results and renders them
+    // when they're received.
     var previousSearch = '';
     $('#search').keyup(function(e) {
         var query = $(this).val();
@@ -432,9 +448,9 @@ $(document).ready(function() {
         }
         
         previousSearch = query;
-        var loadingIcon = $('.add .loading-icon').show(),
-            searchResultsWrapper = $('#search-results').hide(),
-            that = this;
+        var $loadingIcon = $('.add .loading-icon').show();
+        var $searchResultsWrapper = $('#search-results').hide();
+        var that = this;
         
         setTimeout(function() {
             // If the query's changed in the time between when it was typed
@@ -461,8 +477,8 @@ $(document).ready(function() {
                     return;
                 }
 
-                var html = result.html,
-                    addTrackButtonHtml = '' +
+                var html = result.html;
+                var addTrackButtonHtml = '' +
                       '<div class="add-track-button">' +
                         '<span>add</span>' +
                       '</div>' +
@@ -470,28 +486,32 @@ $(document).ready(function() {
 
                 // Hide the loading indicators once we've rendered
                 // the result
-                loadingIcon.hide();
-                searchResultsWrapper.html(html).show();
+                $loadingIcon.hide();
+                $searchResultsWrapper.html(html).show();
 
-                var trackElems = searchResultsWrapper.find('.track');
-
+                var $trackElems = $searchResultsWrapper.find('.track');
+                
+                // Add track slide indicators
+                var trackIndicatorHtml = '<div class="track-indicator"></div>';
+                var $trackIndicatorWrapperElem = $('.track-indicators');
+                for(var i = 0; i < $trackElems.length; i++) {
+                    $(trackIndicatorHtml)
+                        .attr('slide-order', i)
+                        .appendTo($trackIndicatorWrapperElem);
+                }
+                
                 // Make the first search result visible
-                var firstResultElem = trackElems.first().addClass('active');
-
-                // Set the background to this element's background
-                // image
-                var backgroundImage = firstResultElem.find('.inner .icon')
-                        .css('background-image');
-                groupFns.setBackground(backgroundImage);
-
-                var innerTrackElems = trackElems
-                    .find('.inner');
-              
-                // Set the height on the artwork so that it forms a
-                // square
-                innerTrackElems
-                    .find('.icon')
-                    .css('height', innerTrackElems.find('.icon').width())
+                var $firstResultElem = $trackElems.first().addClass('active');
+                
+                var $innerElems = $trackElems.find('.inner');
+                $innerElems.find('.icon')
+                
+                    // Set the height on the artwork so that it forms a square
+                    // We have to make sure we do this with an element that's
+                    // already visible
+                    .css('height', $firstResultElem.find('.inner').width())
+                
+                    // Add Hammer touch listeners to the album artwork
                     .each(function(i) {
                     var elem = $(this).attr('slide-order', i);
                     var hammer = new Hammer(elem[0]);
@@ -509,25 +529,30 @@ $(document).ready(function() {
                     });
                 });
                 
+                // Create some add track buttons, add a click listener to each,
+                // and append one to each of the inner elements
                 $(addTrackButtonHtml)
                     .click(groupFns.submitForVotingClickFn)
-                    .appendTo(innerTrackElems)
-
-                // Add track slide indicators
-                var trackIndicatorHtml = '<div class="track-indicator"></div>';
-                var trackIndicatorWrapperElem = $('.track-indicators');
-                for(var i = 0; i < trackElems.length; i++) {
-                    $(trackIndicatorHtml)
-                        .attr('slide-order', i)
-                        .appendTo(trackIndicatorWrapperElem);
-                }
-              
-                var firstResultSlideOrder = firstResultElem.find('.inner .icon').attr('slide-order');
+                    .appendTo($innerElems)
+                
+                // Set the local group background to this element's background
+                // image
+                var backgroundImage = $firstResultElem.find('.inner .icon')
+                        .css('background-image');
+                    
+                var firstResultSlideOrder = $firstResultElem
+                        .find('.inner .icon').attr('slide-order');
+                
+                groupFns.setBackground(backgroundImage);
                 groupFns.setTrackNumDisplay(firstResultSlideOrder);
                 
                 // Update the displayed number of results
-                $('.search-results .num-tracks').text(trackElems.length);
+                $('.search-results .num-tracks').text($trackElems.length);
                 
+                
+                // Store each of the tracks in the store of loaded tracks.
+                // We'll need to send a track's data back to the server if
+                // it gets added for voting
                 var tracks = result.tracks.items;
                 for(var i = 0; i < tracks.length; i++) {
                     var id = tracks[i].id;
@@ -537,21 +562,21 @@ $(document).ready(function() {
         }, 800);
     });
     
-    // Clears the search page
+    // Clears the search section
     groupFns.clearSearch = function() {
         $('#search').val('').keyup();
     };
     
     /* voting */
-    var numTotalVotes = 0,
-        firebase = new Firebase('https://blinding-fire-3652.firebaseio.com/'),
-        groupRef = firebase.child('groups').child(groupId),
-        tracksRef = groupRef.child('voting_tracks'),
-        votingTrackObjects = [];
+    var numTotalVotes = 0;
+    var firebase = new Firebase('https://blinding-fire-3652.firebaseio.com/');
+    var groupRef = firebase.child('groups').child(groupId);
+    var tracksRef = groupRef.child('voting_tracks');
+    var votingTrackObjects = [];
     
     groupFns.getWinningTrackJson = function() {
-        var winningNumVotes = -1,
-            winningTrack = undefined;
+        var winningNumVotes = -1;
+        var winningTrack = undefined;
         for(var key in votingTrackObjects) {
             if((votingTrackObjects[key].num_votes || 0) > winningNumVotes) {
                 winningTrack = votingTrackObjects[key];
@@ -593,8 +618,8 @@ $(document).ready(function() {
     });
     
     tracksRef.on('child_removed', function(snapshot) {
-        var val = snapshot.val(),
-            id = val.id;
+        var val = snapshot.val();
+        var id = val.id;
         
         delete votingTrackObjects[id];
         $('.voting-object[track-id="' + id + '"]').remove();
@@ -616,11 +641,11 @@ $(document).ready(function() {
             return;
         }
         
-        var val = snapshot.val(),
-            trackId = val.id,
-            numVotes = val.num_votes,
-            oldNumVotes = votingTrackObjects[trackId].num_votes,
-            trackElem = $('.voting-object.track[track-id="' + trackId + '"]');
+        var val = snapshot.val();
+        var trackId = val.id;
+        var numVotes = val.num_votes;
+        var oldNumVotes = votingTrackObjects[trackId].num_votes;
+        var $trackElem = $('.voting-object.track[track-id="' + trackId + '"]');
         
         // update this track's record in the voting tracks store
         votingTrackObjects[trackId] = val;
@@ -638,7 +663,7 @@ $(document).ready(function() {
             // If the vote got added after the element was already
             // rendered, go ahead and make the vote button active
             if(val.voter_ids[userId]) {
-                trackElem.find('.vote-button').addClass('active');
+                $trackElem.find('.vote-button').addClass('active');
             }
         };
         
@@ -646,10 +671,10 @@ $(document).ready(function() {
         // hasn't been added to the DOM by the time the child_changed handler
         // is called. We set an interval here that checks repeatedly for the DOM
         // element until it's loaded
-        if(trackElem.length === 0) {
+        if($trackElem.length === 0) {
             var interval = setInterval(function() {
-                trackElem = $('.track[track-id="' + trackId + '"]');
-                if(trackElem.length === 0) {return;}
+                $trackElem = $('.track[track-id="' + trackId + '"]');
+                if($trackElem.length === 0) {return;}
                 clearInterval(interval);
                 setUpVoteElems();
             }, 200);
@@ -667,49 +692,51 @@ $(document).ready(function() {
     /**
      * Fills the winner's circle element with the data in trackJson
      *
-     * @param Object trackJson JSON object for track to render
+     * @param {object} trackJson JSON object for track to render
      */
     groupFns.setWinnersCircle = function(trackJson) {
         if(!trackJson) {
             return;
         }
         
-        var name = trackJson.name,
-            artists = trackJson.artists,
-            img = trackJson.album.images[0].url,
+        var name = trackJson.name;
+        var artists = trackJson.artists;
+        var imgUrl = trackJson.album.images[0].url;
             
-            // There's a chance that the number of votes is undefined at this
-            // point in time, though it'll probably be updated again before
-            // this matters anyway
-            numVotes = trackJson.num_votes || 0,
-            
-            winnersCircleElem = $('.winners-circle'),
-            iconElem = winnersCircleElem.find('.icon'),
-            infoElem = winnersCircleElem.find('.info');
+        // There's a chance that the number of votes is undefined at this
+        // point in time, though it'll probably be updated again before
+        // this matters anyway
+        var numVotes = trackJson.num_votes || 0;
+
+        var $winnersCircleElem = $('.winners-circle');
+        var $iconElem = $winnersCircleElem.find('.icon');
+        var $infoElem = $winnersCircleElem.find('.info');
         
-        iconElem.css({
-            backgroundImage: 'url("' + img + '")'
+        $iconElem.css({
+            backgroundImage: 'url("' + imgUrl + '")'
         });
         
-        infoElem.find('.track').text(name);
+        $infoElem.find('.track').text(name);
         var names = [];
         for(var i = 0; i < artists.length; i++) {
             names.push(artists[i].name);
         }
-        infoElem.find('.artist').text(names.join(', '));
-        infoElem.find('.num-votes').text(numVotes);
-        infoElem.find('.vote-text').text(parseInt(numVotes) === 1 ? 'vote' : 'votes');
+        
+        $infoElem.find('.artist').text(names.join(', '));
+        $infoElem.find('.num-votes').text(numVotes);
+        $infoElem.find('.vote-text').text(parseInt(numVotes) === 1 ?
+                                            'vote' : 'votes');
     };
     
     /**
      * Shows the winner's circle
      */
     groupFns.showWinnersCircle = function() {
-        var winnersCircleElem = $('.winners-circle');
-        if(winnersCircleElem.is(':visible')) {
+        var $winnersCircleElem = $('.winners-circle');
+        if($winnersCircleElem.is(':visible')) {
             return;
         }
-        winnersCircleElem
+        $winnersCircleElem
             .css({
                 opacity: 0,
             })
@@ -723,11 +750,11 @@ $(document).ready(function() {
      * Hides the winner's circle
      */
     groupFns.hideWinnersCircle = function() {
-        var winnersCircleElem = $('.winners-circle');
-        if(!winnersCircleElem.is(':visible')) {
+        var $winnersCircleElem = $('.winners-circle');
+        if(!$winnersCircleElem.is(':visible')) {
             return;
         }
-        winnersCircleElem
+        $winnersCircleElem
             .velocity({
                 opacity: 0,
             }).velocity('slideUp')
@@ -762,17 +789,18 @@ $(document).ready(function() {
     
     groupFns.adjustVoteIndicators = function() {
         $('.voting-object').each(function(i) {
-            var numVotesElem = $(this).find('.num-votes');
-            var numVotes = numVotesElem.text();
+            var $numVotesElem = $(this).find('.num-votes');
+            var numVotes = $numVotesElem.text();
             $(this).find('.votes-indicator .bar').css({
                 width: ((numVotes/numTotalVotes) * 100) + '%',
             });
         });
     };
     
-    var moveVotingObjectsQueue = [],
-        moveVotingObjectsInterval = undefined,
-        moveVotingObjectsCurrentTask = undefined;
+    var moveVotingObjectsQueue = [];
+    var moveVotingObjectsInterval;
+    var moveVotingObjectsCurrentTask;
+    
     /**
      * Moves voting objects to their proper positions
      * 
@@ -805,8 +833,9 @@ $(document).ready(function() {
          * Helper function that gets the number of votes from a
          * voting object element
          * 
-         * @param elem The voting object element to get the number of votes from
-         * @returns Number The number of votes the voting object has recorded
+         * @param {HTMLElement} elem The voting object element to get the
+         * number of votes from
+         * @returns {number} The number of votes the voting object has recorded
          */
         var getNumVotes = function(elem) {
             return parseInt($(elem).find('.num-votes').text());
@@ -837,6 +866,7 @@ $(document).ready(function() {
         // If they are, we can cut out early
         var lastNumVotes;
         var sorted = true;
+        
         $('.voting-object').each(function(i) {
             var numVotes = getNumVotes($(this));
             if(lastNumVotes === undefined) {
@@ -891,7 +921,7 @@ $(document).ready(function() {
         // unset our absolute positioning and top changes
         // and quickly reappend the voting objects in their
         // proper order
-        var wrapper = elems[0].parent();
+        var $wrapper = elems[0].parent();
         /**
          * Helper function that removes added positioning styles and reappends
          * each of the voting objects in the order given by elems
@@ -904,11 +934,11 @@ $(document).ready(function() {
             // Add winning class to the first element before
             // we reappend it
             for(var i = 0; i < elems.length; i++) {
-                var elem = elems[i].appendTo(wrapper)
+                var $elem = elems[i].appendTo($wrapper)
                 if(animate) {
                     // We only need to adjust positioning if we changed it
                     // earlier to set up animations
-                    elem.css({
+                    $elem.css({
                         position: '',
                         top: '',
                     });
@@ -950,11 +980,12 @@ $(document).ready(function() {
     groupRef.child('time_left').on('value', function(snapshot) {
         var ms = snapshot.val();
         if(ms === undefined || ms === null) {return;}
+        
         var seconds = Math.floor((ms % 60000) / 1000);
         var minutes = Math.floor(ms / 60000);
-        
         if(seconds < 10) {seconds = '0' + seconds;}
-        var time = minutes + ':' + seconds;
-        $('.time-indicator .time').text(time);
+        
+        var str = minutes + ':' + seconds;
+        $('.time-indicator .time').text(str);
     });
 });
