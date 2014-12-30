@@ -97,7 +97,7 @@ exports.create_group = function(req, res) {
     var spotifyId  = req.session.spotify_id;
     var name     = req.body.name;
     var location = req.body.location;
-    var pub      = req.body.['public'] || false;
+    var pub      = req.body['public'] || false;
     
     var spotify = new SpotifyAPI({
         accessToken: req.session.access_token,
