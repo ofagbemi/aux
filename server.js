@@ -17,49 +17,43 @@ mongoose.connect(databaseUrl);
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
 
-app.engine('handlebars',
-           handlebars({defaultLayout: 'main',
-                        helpers: {
-                            equal: function(v1, v2, options) {
-                                if(v1 === v2) {
-                                  return options.fn(this);
-                                }
-                                return options.inverse(this);
-                            },
-                          
-                            ifCond: function(v1, operator, v2, options) {
-                                function checkCondition(v1, operator, v2) {
-                                    switch(operator) {
-                                        case '==':
-                                            return (v1 == v2);
-                                        case '===':
-                                            return (v1 === v2);
-                                        case '!==':
-                                            return (v1 !== v2);
-                                        case '<':
-                                            return (v1 < v2);
-                                        case '<=':
-                                            return (v1 <= v2);
-                                        case '>':
-                                            return (v1 > v2);
-                                        case '>=':
-                                            return (v1 >= v2);
-                                        case '&&':
-                                            return (v1 && v2);
-                                        case '||':
-                                            return (v1 || v2);
-                                        default:
-                                            return false;
-                                    }
-                                }
+var equal = function(v1, v2, options) {
+    if(v1 === v2) {
+      return options.fn(this);
+    }
+    return options.inverse(this);
+};
 
-                                return checkCondition(v1, operator, v2)
-                                            ? options.fn(this)
-                                            : options.inverse(this);
-                            },
-                        }
-                      })
-          );
+var ifCond = function(v1, operator, v2, options) {
+    var checkCondition = function(v1, operator, v2) {
+        switch(operator) {
+            case '==': return (v1 == v2);
+            case '===': return (v1 === v2);
+            case '!==': return (v1 !== v2);
+            case '<': return (v1 < v2);
+            case '<=': return (v1 <= v2);
+            case '>': return (v1 > v2);
+            case '>=': return (v1 >= v2);
+            case '&&': return (v1 && v2);
+            case '||': return (v1 || v2);
+            default: return false;
+        };
+    };
+    return checkCondition(v1, operator, v2) ?
+        options.fn(this) : options.inverse(this);
+};
+
+app.engine(
+    'handlebars',
+    handlebars({
+        defaultLayout: 'main',
+        helpers: {
+            equal: equal,
+            ifCond: ifCond
+        }
+    })
+);
+
 app.set('view engine', 'handlebars');
 
 app.use(expressPartials());
