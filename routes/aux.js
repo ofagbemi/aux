@@ -97,14 +97,14 @@ exports.create_group = function(req, res) {
     var spotifyId  = req.session.spotify_id;
     var name     = req.body.name;
     var location = req.body.location;
-    var public   = req.body.public || false;
+    var pub      = req.body.['public'] || false;
     
     var spotify = new SpotifyAPI({
         accessToken: req.session.access_token,
         refreshToken: req.session.refresh_token
     });
     
-    spotify.createPlaylist(spotifyId, name, {public: public})
+    spotify.createPlaylist(spotifyId, name, {'public': pub})
         .then(function(playlist) {
             // Store the group with its location on mongo
             models.Group.create({
