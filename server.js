@@ -17,49 +17,43 @@ mongoose.connect(databaseUrl);
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
 
-app.engine('handlebars',
-           handlebars({defaultLayout: 'main',
-                        helpers: {
-                            equal: function(v1, v2, options) {
-                                if(v1 === v2) {
-                                  return options.fn(this);
-                                }
-                                return options.inverse(this);
-                            },
-                          
-                            ifCond: function(v1, operator, v2, options) {
-                                function checkCondition(v1, operator, v2) {
-                                    switch(operator) {
-                                        case '==':
-                                            return (v1 == v2);
-                                        case '===':
-                                            return (v1 === v2);
-                                        case '!==':
-                                            return (v1 !== v2);
-                                        case '<':
-                                            return (v1 < v2);
-                                        case '<=':
-                                            return (v1 <= v2);
-                                        case '>':
-                                            return (v1 > v2);
-                                        case '>=':
-                                            return (v1 >= v2);
-                                        case '&&':
-                                            return (v1 && v2);
-                                        case '||':
-                                            return (v1 || v2);
-                                        default:
-                                            return false;
-                                    }
-                                }
+var equal = function(v1, v2, options) {
+    if(v1 === v2) {
+      return options.fn(this);
+    }
+    return options.inverse(this);
+};
 
-                                return checkCondition(v1, operator, v2)
-                                            ? options.fn(this)
-                                            : options.inverse(this);
-                            },
-                        }
-                      })
-          );
+var ifCond = function(v1, operator, v2, options) {
+    var checkCondition = function(v1, operator, v2) {
+        switch(operator) {
+            case '==': return (v1 == v2);
+            case '===': return (v1 === v2);
+            case '!==': return (v1 !== v2);
+            case '<': return (v1 < v2);
+            case '<=': return (v1 <= v2);
+            case '>': return (v1 > v2);
+            case '>=': return (v1 >= v2);
+            case '&&': return (v1 && v2);
+            case '||': return (v1 || v2);
+            default: return false;
+        };
+    };
+    return checkCondition(v1, operator, v2) ?
+        options.fn(this) : options.inverse(this);
+};
+
+app.engine(
+    'handlebars',
+    handlebars({
+        defaultLayout: 'main',
+        helpers: {
+            equal: equal,
+            ifCond: ifCond
+        }
+    })
+);
+
 app.set('view engine', 'handlebars');
 
 app.use(expressPartials());
@@ -87,8 +81,10 @@ app.use(sassMiddleware({
 
 
 var aux = require('./routes/aux');
-app.get('/create', aux.create);
 app.get('/', aux.index);
+app.get('/login', aux.login);
+app.get('/auth', aux.auth);
+app.get('/create', aux.create);
 app.get('/find', aux.find);
 app.get('/group/:group_id', aux.show_group);
 app.get('/find_nearby_groups', aux.find_nearby_groups);
@@ -99,10 +95,6 @@ app.get('/get_user_id', aux.get_user_id);
 app.post('/create_group', aux.create_group);
 app.post('/add_track_for_voting', aux.add_track_for_voting);
 app.post('/vote', aux.vote);
-
-
-app.get('/login', aux.login);
-app.get('/auth', aux.auth);
 
 var port = Number(process.env.PORT || 5000);
 app.listen(port);

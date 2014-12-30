@@ -20,7 +20,8 @@ firebaseRef.authWithCustomToken(process.env.FIREBASE_SECRET, function(err) {
 var spotifyCredentials = {
     clientId:     'dd954dc18db547cfb93af5f71da7936f',
     clientSecret:  process.env.SPOTIFY_CLIENT_SECRET,
-    redirectUri:  'http://localhost:5000/auth'
+    redirectUri:   process.env.NODE_ENV === 'development' ?
+        'http://localhost:5000/auth' : 'http://aux.herokuapp.com/auth'
 },
     scopes = ['user-read-private', 'user-read-email', 'playlist-modify-public',
               'playlist-modify-private'],
