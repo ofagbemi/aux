@@ -4,6 +4,10 @@
 $logo-font-stack: 'Open Sans', 'Helvetica Neue', sans-serif;
 $font-stack: 'Helvetica Neue', sans-serif;
 
+@-ms-viewport {
+  width: device-width;
+}
+
 body {
   margin: 0;
   padding-bottom: 11px;
