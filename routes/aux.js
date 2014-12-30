@@ -4,28 +4,31 @@ var request  = require('request'),
     Firebase = require('firebase'),
     SpotifyAPI  = require('spotify-web-api-node');
 
-// Milliseconds between voting rounds
-var voteWaitTime = 30000;
-exports.voteWaitTime = this.voteWaitTime;
-
 var firebaseRef = new Firebase(process.env.FIREBASE_URL);
 firebaseRef.authWithCustomToken(process.env.FIREBASE_SECRET, function(err) {
     if(err) {
-        console.log('Couldn\'t authenticate', err);
+        console.log('Couldn\'t authenticate Firebase connection', err);
     } else {
-        console.log('Authenticated successfully');
+        console.log('Authenticated Firebase connection successfully');
     }
 });
+
+var spotifyRedirectUri = process.env.NODE_ENV === 'development' ?
+        'http://localhost:5000/auth' : 'http://aux.herokuapp.com/auth';
 
 var spotifyCredentials = {
     clientId:     'dd954dc18db547cfb93af5f71da7936f',
     clientSecret:  process.env.SPOTIFY_CLIENT_SECRET,
-    redirectUri:   process.env.NODE_ENV === 'development' ?
-        'http://localhost:5000/auth' : 'http://aux.herokuapp.com/auth'
-},
-    scopes = ['user-read-private', 'user-read-email', 'playlist-modify-public',
-              'playlist-modify-private'],
-    stateKey = 'spotify_auth_state';
+    redirectUri:   spotifyRedirectUri
+};
+
+var spotifyAuthScopes = ['user-read-private', 'user-read-email',
+                         'playlist-modify-public', 'playlist-modify-private'];
+var spotifyStateKey = 'spotify_auth_state';
+
+
+// Milliseconds between voting rounds
+var voteWaitTime = 30000;
 
 /**
  * Called when it's time to actually log the user into Spotify.
@@ -38,11 +41,11 @@ var spotifyCredentials = {
 exports.login = function(req, res) {
     
     var spotify = new SpotifyAPI(spotifyCredentials);
-    var state = _generateRandomString(16);
+    var spotifyState = _generateRandomString(16);
     
     // store the state so we can check it in the auth endpoint
-    res.cookie(stateKey, state);
-    var authUrl = spotify.createAuthorizeURL(scopes, state);
+    res.cookie(spotifyStateKey, spotifyState);
+    var authUrl = spotify.createAuthorizeURL(spotifyAuthScopes, spotifyState);
     res.redirect(authUrl);
 };
 
@@ -55,12 +58,12 @@ exports.login = function(req, res) {
  * @param res
  */
 exports.auth = function(req, res) {
-    var state = req.query.state || null;
+    var spotifyState = req.query.state || null;
     var code = req.query.code || null;
-    var storedState = req.cookies ? req.cookies[stateKey] : null;
+    var storedSpotifyState = req.cookies ? req.cookies[spotifyStateKey] : null;
     
     // Check the state
-    if(state === null || state !== storedState) {
+    if(storedSpotifyState === null || spotifyState !== storedSpotifyState) {
         res.statusCode(403).send('bad state');
         return;
     }

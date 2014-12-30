@@ -47,13 +47,13 @@
                           longitude: geo.coords.longitude,
                           accuracy: geo.coords.accuracy,
                       },
+                      'public': false
                   };
                   
                   $.ajax({
                       type: 'POST',
-                      url: 'http://localhost:5000/create_group',
+                      url: '/create_group',
                       data: JSON.stringify(data),
-                      public: false,
                       contentType: 'application/json',
                   }).done(function(response) {
                       console.log(response);
