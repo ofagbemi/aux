@@ -54,9 +54,9 @@ exports.login = function(req, res) {
  * @param res
  */
 exports.auth = function(req, res) {
-    var state = req.query.state || null,
-        code = req.query.code || null,
-        storedState = req.cookies ? req.cookies[stateKey] : null;
+    var state = req.query.state || null;
+    var code = req.query.code || null;
+    var storedState = req.cookies ? req.cookies[stateKey] : null;
     
     // Check the state
     if(state === null || state !== storedState) {
@@ -94,10 +94,10 @@ exports.auth = function(req, res) {
  * @param res
  */
 exports.create_group = function(req, res) {
-    var spotifyId  = req.session.spotify_id,
-        name     = req.body.name,
-        location = req.body.location,
-        public   = req.body.public || false;
+    var spotifyId  = req.session.spotify_id;
+    var name     = req.body.name;
+    var location = req.body.location;
+    var public   = req.body.public || false;
     
     var spotify = new SpotifyAPI({
         accessToken: req.session.access_token,
@@ -144,6 +144,13 @@ exports.create_group = function(req, res) {
  * Searches for tracks via the Spotify search api
  *
  * @param req
+ *     @param {string} req.query.q
+ *     @param {number} req.query.limit
+ *     @param {number} req.query.offset
+ *     @param {boolean} [req.query.html=false] When this is set to true, the
+ *     response JSON will render the html for several search results in its
+ *     "html" member
+ *     
  * @param res
  */
 exports.search = function(req, res) {
@@ -153,10 +160,10 @@ exports.search = function(req, res) {
         refreshToken: req.session.refresh_token
     });
     
-    var query = req.query.q,
-        limit = req.query.limit || 10,
-        offset = req.query.offset || 0,
-        renderHtml = req.query.html === 'true' ||
+    var query = req.query.q;
+    var limit = req.query.limit || 10;
+    var offset = req.query.offset || 0;
+    var renderHtml = req.query.html === 'true' ||
                      req.query.html === true;
     
     spotify.searchTracks(query, {limit: limit, offset: offset}).then(function(searchJson) {
@@ -184,28 +191,37 @@ exports.search = function(req, res) {
 };
 
 /**
+ * Called when the song has been added to the playlist or we reach an error
+ *
+ * @callback addLeaderToPlaylistCallback
+ * @param [err]
+ */
+
+/**
  * Adds a track to a the playlist that belongs to a given group.
  *
  * @param {string} groupId
- * @param {function} [complete]
+ * @param {addLeaderToPlaylistCallback} [onComplete]
  */
-var addLeaderToPlaylist = function(groupId, complete) {
+var addLeaderToPlaylist = function(groupId, onComplete) {
     
-    complete = complete || function() {return undefined;};
+    onComplete = onComplete || function() {return undefined;};
     
     var groupRef = firebaseRef.child('groups').child(groupId);
     groupRef.once('value', function(snapshot) {
         
         // Start by getting the group from Firebase. Then we'll run through
         // its voting tracks to determine which is the winner
-        var group = snapshot.val(),
-            winningTrack = undefined,
-            winningTrackKey = undefined,
-            winningTrackNumVotes = -1,
-            spotify = new SpotifyAPI({
-                accessToken: group.access_token,
-                refreshToken: group.refresh_token
-            });
+        var group = snapshot.val();
+        var spotify = new SpotifyAPI({
+            accessToken: group.access_token,
+            refreshToken: group.refresh_token
+        });
+        
+        var winningTrackNumVotes = -1;
+        var winningTrackKey;
+        var winningTrack;
+        
         for(var key in group.voting_tracks) {
             var numVotes = group.voting_tracks[key].num_votes || 0;
             if(numVotes > winningTrackNumVotes) {
@@ -215,7 +231,7 @@ var addLeaderToPlaylist = function(groupId, complete) {
             }
         }
         if(!winningTrackKey) {
-            complete('No winning track found');
+            onComplete('No winning track found');
             return;
         }
         
@@ -223,7 +239,7 @@ var addLeaderToPlaylist = function(groupId, complete) {
         var votingTracksRef = groupRef.child('voting_tracks');
         votingTracksRef.child(winningTrackKey).remove(function(err) {
             if(err) {
-                complete(err);
+                onComplete(err);
                 return;
             }
             
@@ -250,25 +266,43 @@ var addLeaderToPlaylist = function(groupId, complete) {
             ).then(function(data) {
                 console.log('added track', winningTrack.uri, 'to playlist',
                             group.playlist_id);
-                complete();
+                onComplete();
             }, function(err) {
                 console.log('there was an error adding', winningTrack.uri,
                             'to playlist', group.playlist_id, ':', err);
-                complete(err);
+                onComplete(err);
             });
         });
     });
 };
 
-
+/**
+ * Responds with a JSON object containing the requester's user id
+ *
+ * @param req
+ * @param res
+ */
 exports.get_user_id = function(req, res) {
     res.status(200).json({user_id: req.session.user_id});
 };
 
+/**
+ * Renders the group creation page
+ *
+ * @param req
+ * @param res
+ */
 exports.create = function(req, res) {
-    res.status(200).render('old');
+    res.status(200).render('create');
 };
 
+/**
+ * Renders the index page
+ * @param req
+ *     @param {string} [req.query.layout=true] Pass false as a query parameter
+ *     if the template should be rendered without a layout
+ * @param res
+ */
 exports.index = function(req, res) {
     
     var layout = req.query.layout !== false;
@@ -280,6 +314,14 @@ exports.index = function(req, res) {
     }
 };
 
+/**
+ * Renders find nearby groups page
+ *
+ * @param req
+ *     @param {string} [req.query.layout=true] Pass false as a query parameter
+ *     if the template should be rendered without a layout
+ * @param res
+ */
 exports.find = function(req, res) {
     var layout = req.query.layout !== 'false' &&
                  req.query.layout !== false;
@@ -294,6 +336,7 @@ exports.find = function(req, res) {
  * Generates a user id based on a given group id
  *
  * @param {string} group_id
+ * @returns {string}
  */
 var generateUserId = function(group_id) {
     return crypto.createHash('md5').update(group_id + new Date()).digest('hex');
@@ -303,6 +346,8 @@ var generateUserId = function(group_id) {
  * Renders a group page
  *
  * @param req
+ *     @param {string} [req.query.layout=true] Pass false as a query parameter
+ *     if the template should be rendered without a layout
  * @param res
  */
 exports.show_group = function(req, res) {
@@ -352,6 +397,7 @@ exports.show_group = function(req, res) {
  * JSON hash (req.query.json)
  *
  * @param req
+ *     @param {string} req.query.json
  * @param res
  */
 exports.render_voting_track = function(req, res) {
@@ -376,8 +422,8 @@ exports.find_nearby_groups = function(req, res) {
     var renderHtml = req.query.html === 'true' ||
                      req.query.html === true;
     
-    var latitude  = Number(req.query.latitude),
-        longitude = Number(req.query.longitude);
+    var latitude  = Number(req.query.latitude);
+    var longitude = Number(req.query.longitude);
     
     var distance = Number(req.query.distance || 1000); // default to 1,000 m
     var sendData = function(err, data) {
@@ -386,11 +432,11 @@ exports.find_nearby_groups = function(req, res) {
             res.status(500).send(err);
             return;
         }
-        
         if(renderHtml) {
-            res.render('partials/group-list',
-                       {layout: false,
-                        groups: data});
+            res.render('partials/group-list', {
+                layout: false,
+                groups: data
+            });
         } else {
             res.status(200).json(data);
         }
@@ -408,9 +454,9 @@ exports.find_nearby_groups = function(req, res) {
  * @param {string} groupId
  */
 var startNextRound = function(groupId) {
-    var groupRef = firebaseRef.child('groups').child(groupId),
-        timeLeftRef = groupRef.child('time_left'),
-        roundNumRef = groupRef.child('round_num');
+    var groupRef = firebaseRef.child('groups').child(groupId);
+    var timeLeftRef = groupRef.child('time_left');
+    var roundNumRef = groupRef.child('round_num');
     
     roundNumRef.transaction(function(currentRoundNum) {
         return (currentRoundNum || 0) + 1;
@@ -438,17 +484,19 @@ var startNextRound = function(groupId) {
 };
 
 /**
- * Adds a track to a specified group's voting tracks and, if the track
- * was previously empty, kicks off the group's voting timer
+ * Adds a track to a specified group's voting tracks and, if the track was
+ * previously empty, kicks off the group's voting timer
  *
  * @param req
+ *     @param {string} req.body.track A JSON encoded string representing a
+ *     Spotify track
  * @param res
  */
 exports.add_track_for_voting = function(req, res) {
-    var track = JSON.parse(req.body.track),
-        trackId = track.id,
-        groupId = req.body.group_id,
-        voterId = req.session.user_id;
+    var track = JSON.parse(req.body.track);
+    var trackId = track.id;
+    var groupId = req.body.group_id;
+    var voterId = req.session.user_id;
     
     var groupRef = firebaseRef.child('groups').child(groupId);
     
@@ -491,10 +539,12 @@ exports.add_track_for_voting = function(req, res) {
  * 
  * @param {object} params A hash that should contain groupId, trackId, and
  * voterId
- * @param {boolean} [params.ignorePast] Vote even if the user has already
- * voted for this track
- * @param {Number} [params.numVotes] number of votes to add
- * 
+ *     @param {string} params.groupId
+ *     @param {string} params.trackId
+ *     @param {string} params.voterId
+ *     @param {boolean} [params.ignorePast] Vote even if the user has already
+ *     voted for this track
+ *     @param {Number} [params.numVotes] number of votes to add
  * @param {function} [callback] Callback passed as the onComplete parameter
  * to a call to Firebase.transaction()
  */
@@ -530,6 +580,9 @@ var vote = function(params, callback) {
  * Adds a vote to a given track
  *
  * @param req
+ *     @param {string} req.body.group_id
+ *     @param {string} req.body.track_id
+ *     @param {string} req.session.user_id
  * @param res
  */
 exports.vote = function(req, res) {
@@ -540,7 +593,7 @@ exports.vote = function(req, res) {
             console.log('error voting for track', req.body.track_id, err);
             res.status(500, statusCode || 500).json({err: err, msg: err});
         } else {
-            res.status(200).json({msg: 'user ' + req.body.user_id + 
+            res.status(200).json({msg: 'user ' + req.body.user_id +
                                        ' for ' + req.body.track_id});
         }
     });
@@ -550,11 +603,12 @@ exports.vote = function(req, res) {
  * Generates a random string containing numbers and letters
  *
  * @param  {number} length The length of the string
- * @return {string} The generated string
+ * @returns {string} The generated string
  */
 var _generateRandomString = function(length) {
     var text = '';
-    var possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    var possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' +
+                   '0123456789';
     for (var i = 0; i < length; i++) {
         text += possible.charAt(Math.floor(Math.random() * possible.length));
     }
