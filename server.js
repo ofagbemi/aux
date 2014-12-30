@@ -81,8 +81,10 @@ app.use(sassMiddleware({
 
 
 var aux = require('./routes/aux');
-app.get('/create', aux.create);
 app.get('/', aux.index);
+app.get('/login', aux.login);
+app.get('/auth', aux.auth);
+app.get('/create', aux.create);
 app.get('/find', aux.find);
 app.get('/group/:group_id', aux.show_group);
 app.get('/find_nearby_groups', aux.find_nearby_groups);
@@ -93,10 +95,6 @@ app.get('/get_user_id', aux.get_user_id);
 app.post('/create_group', aux.create_group);
 app.post('/add_track_for_voting', aux.add_track_for_voting);
 app.post('/vote', aux.vote);
-
-
-app.get('/login', aux.login);
-app.get('/auth', aux.auth);
 
 var port = Number(process.env.PORT || 5000);
 app.listen(port);
