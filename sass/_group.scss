@@ -1,11 +1,11 @@
 .group.swap-page > .background {
-  width: 120%;
-  height: 120%;
+  width: 200%;
+  height: 200%;
   position: fixed;
-  top: -10%;
+  top: -50%;
   background-color: black;
-  left: -10%;
-  background-size: auto 150%;
+  left: -20%;
+  background-size: cover;
   background-position: 0 center;
   z-index: -10;
   
@@ -13,11 +13,14 @@
   @include transition( (background 0.8s, opacity 1.8s) );
 }
 
+$header-height: 50px;
 header {
-  /* background-color: #4aa8e2; */
   color: rgb(235, 246, 255);
-  padding: 11px;
-  text-align: center;
+  height: $header-height;
+  
+  @include display(flex);
+  @include align-items(center);
+  @include justify-content(center);
 }
 
 header h2 {
@@ -55,11 +58,11 @@ header h2 {
   background: none;
   color: white;
   
-  font-family: 'Helvetica', 'Arial', sans-serif;
-  font-weight: 200;
+  font-family: 'Helvetica Neue', 'Arial', sans-serif;
+  font-weight: 400;
   font-size: 14px;
   
-  opacity: 0.44;
+  opacity: 0.84;
   
   @include border-radius(2px);
   @include box-shadow(0 0 19px rgba(0, 0, 0, 0.38));
@@ -67,7 +70,7 @@ header h2 {
 }
 
 #search:focus {
-  opacity: 0.84;
+  opacity: 1;
 }
 
 .loading-icon {
@@ -95,7 +98,7 @@ header h2 {
   background-repeat: no-repeat;
   top: 0;
   height: 40px;
-  width: 70px;
+  width: 100px;
   cursor: pointer;
   
   /* to position the buttons above the timer bar behind it */
@@ -115,7 +118,7 @@ header h2 {
   color: white;
   font-family: 'Helvetica Neue', sans-serif;
   font-weight: 200;
-  font-size: 11px;
+  font-size: 15px;
   line-height: 40px;
   text-transform: uppercase;
   font-weight: 400;

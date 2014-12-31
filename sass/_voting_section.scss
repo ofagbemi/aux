@@ -4,7 +4,7 @@
 }
 
 #voting-tracks .voting-list {
-    position: relative;
+  position: relative;
 }
 
 .winners-circle {
@@ -32,19 +32,19 @@
     .track {
       font-weight: 200;
       letter-spacing: 1px;
-      font-size: 28px;
+      font-size: 36px;
       margin-bottom: 8px;
     }
     
     .description {
       font-family: 'Helvetica', 'Helvetica Neue', sans-serif;
-      font-size: 14px;
-      font-weight: 200;
+      font-size: 18px;
+      font-weight: 400;
       
       .artist {
         color: rgba(255, 255, 255, 0.88);
         font-family: 'Helvetica Neue', sans-serif;
-        font-weight: 100;
+        font-weight: 200;
         letter-spacing: 1px;
       }
     }
@@ -55,7 +55,7 @@
       
       .num-votes {
         font-weight: 200;
-        font-size: 22px;
+        font-size: 24px;
       }
     }
   }
@@ -71,6 +71,6 @@
   color: rgba(255, 255, 255, 0.88);
   text-shadow: 0 0 2px rgba(0, 0, 0, 0.14);
   font-weight: 200;
-  font-size: 14px;
+  font-size: 18px;
   font-family: 'Helvetica', sans-serif;
 }

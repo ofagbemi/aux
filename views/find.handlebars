@@ -25,7 +25,7 @@
               var sendLocationQuery = function(geo) {
                   $.ajax({
                       type: 'GET',
-                      url: 'http://localhost:5000/find_nearby_groups',
+                      url: '/find_nearby_groups',
                       data: {
                           longitude: geo.coords.longitude,
                           latitude: geo.coords.latitude,

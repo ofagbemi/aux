@@ -9,23 +9,20 @@
 
 .spotify-object > .inner {
   position: relative;
-  background-color: rgba(255, 255, 255, 0.9);
+  background-color: white;
   box-sizing: border-box;
   text-align: center;
+  overflow: hidden;
   
   @include border-radius(4px);
   @include box-shadow(0 0 11px rgba(0, 0, 0, 0.28));
 }
 
 .spotify-object .inner .icon {
-  width: 105%;
-  margin-left: -2.5%;
+  width: 100%;
   background-size: cover;
   background-repeat: no-repeat;
   display: inline-block;
-  
-  @include box-shadow(4px 0 14px rgba(0, 0, 0, 0.28));
-  @include border-radius(4px);
 }
 
 .spotify-object .copy {
@@ -39,8 +36,8 @@
 .spotify-object .copy .header h2 {
   color: black;
   font-weight: 300;
-  font-size: 21px;
-  padding-bottom: 11px;
+  font-size: 28px;
+  padding-bottom: 6px;
 }
 
 .spotify-object .copy .body {

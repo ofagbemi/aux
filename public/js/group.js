@@ -214,17 +214,7 @@ $(document).ready(function() {
             // Animate the bounce back to the album artwork's original
             // position
             $elem.velocity({
-                translateZ: '0',
-                translateX: (-directionScalar * 11) + 'px',
-                translateY: '2px',
-                rotateZ: (-directionScalar * 2) + 'deg',
-                opacity: 1,
-            }, {
-                easing: 'spring',
-            }).velocity({
-                translateX: '0px',
-                translateY: '0px',
-                rotateZ: '0deg'
+                translateX: '0px'
             }, {
                 easing: 'spring',
             });
@@ -253,23 +243,17 @@ $(document).ready(function() {
                     groupFns.resetSearchResultPosition(hammerEvent, $elem);
                 }
             } else {
-                var rotation = 11 * hammerEvent.deltaX/threshold;
-                var translateY = Math.abs(rotation);
                 var opacity = 1 - Math.abs((hammerEvent.deltaX/threshold)/8);
                 
                 // Set the transforms on the album artwork
-                var transform = 'translateX(' + hammerEvent.deltaX + 'px) ' +
-                                'translateY(' +  translateY + 'px) ' +
-                                'rotate(' + rotation + 'deg)';
+                var transform = 'translateX(' + hammerEvent.deltaX + 'px)';
                 util.setPrefixedStyle($elem[0], 'transform', transform);
                 $elem[0].style.opacity = opacity;
                 
                 // Update the current swipe location
                 groupFns.private.swipeLocation = {
                     translateX: hammerEvent.deltaX,
-                    translateY: translateY,
-                    rotateZ: rotation,
-                    opacity: opacity,
+                    opacity: opacity
                 };
             }
         },
@@ -312,7 +296,7 @@ $(document).ready(function() {
                 
             var $elemInner = $artworkElem.parents('.inner');
             var $elemSpotifyObject = $elemInner.parents('.spotify-object');
-            var $nextArtworkElem = $('.inner .icon[slide-order="' + nextSlideOrder + '"');
+            var $nextArtworkElem = $('.inner .icon[slide-order="' + nextSlideOrder + '"]');
             
             // Record the last swipe here to prevent the swipe of the same
             // search result from being called to soon after the last time
@@ -325,7 +309,7 @@ $(document).ready(function() {
             }
             groupFns.private.lastSwipe = {
                 time: new Date(),
-                slideOrder: slideOrder,
+                slideOrder: slideOrder
             };
             
             // Make note of the fact that the swipe event is currently
@@ -353,9 +337,7 @@ $(document).ready(function() {
             // Animating the artwork
             $artworkElem.velocity({
                 translateX: (directionScalar * window.innerWidth) + 'px',
-                translateY: '11px',
-                rotateZ: (directionScalar * 11) + 'deg',
-                opacity: 0,
+                opacity: 0
             });
             
             // Called when it's time to show the next element
@@ -375,9 +357,7 @@ $(document).ready(function() {
                 // And animate the next element's album artwork
                 $nextArtworkElem.velocity({
                     translateX: '0px',
-                    translateY: '0px',
-                    rotateZ: '0deg',
-                    opacity: 1,
+                    opacity: 1
                 }, {
                     delay: 200,
                     easing: 'spring',
@@ -385,7 +365,7 @@ $(document).ready(function() {
                     complete: function() {
                         // done swiping
                         groupFns.private.swiping = false;
-                    },
+                    }
                 });
             };
             
@@ -396,9 +376,7 @@ $(document).ready(function() {
             // Start by prepping the next element's card
             // Set the transform property on its album artwork
             var transform = 'translateX(' +
-                            (-directionScalar * window.innerWidth/2) + 'px) ' +
-                            'translateY(11px) ' + 
-                            'rotate(' + (-directionScalar * 11) + 'deg)';
+                            (-directionScalar * window.innerWidth/2) + 'px) ';
             util.setPrefixedStyle($nextArtworkElem[0], 'transform', transform);
             
             // Hide its copy

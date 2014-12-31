@@ -11,8 +11,8 @@ $font-stack: 'Helvetica Neue', sans-serif;
 body {
   margin: 0;
   padding-bottom: 11px;
-  /* background-color: rgb(238, 241, 242); */
   background-color: black;
+  padding-top: 20px; /* for status bar */
 }
 
 a {
