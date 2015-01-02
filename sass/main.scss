@@ -1,5 +1,4 @@
 @import 'mixins';
-@import 'fonts';
 
 $logo-font-stack: 'Open Sans', 'Helvetica Neue', sans-serif;
 $font-stack: 'Helvetica Neue', sans-serif;
@@ -12,7 +11,6 @@ body {
   margin: 0;
   padding-bottom: 11px;
   background-color: black;
-  padding-top: 20px; /* for status bar */
 }
 
 a {
@@ -33,7 +31,6 @@ h1, h2 {
 
 .content {  
   width: 100%;
-  height: 100%;
 }
 
 .index.content {
@@ -42,7 +39,12 @@ h1, h2 {
   @include justify-content(center);
 }
 
-@import '_search_results';
+.pjax-container {
+  overflow-x: hidden;
+}
+
+@import 'header';
+@import 'search_results';
 @import 'animation_classes';
 @import 'group';
 @import 'spotify_object';

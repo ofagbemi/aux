@@ -8,23 +8,81 @@
   <link href='http://fonts.googleapis.com/css?family=Roboto:400,700' rel='stylesheet' type='text/css'>
   <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,300,600,700' rel='stylesheet' type='text/css'>
   <link href="/public/css/main.css" rel="stylesheet" type="text/css">
-    
+  
+  <script src="//use.typekit.net/jiy3ujb.js"></script>
+  <script>try{Typekit.load();}catch(e){}</script>
   <script src='https://cdn.firebase.com/js/client/2.0.6/firebase.js'></script>
   <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
   <script src="http://cdn.jsdelivr.net/velocity/1.1.0/velocity.min.js"></script>
   <script src="/public/js/hammer/hammer.min.js"></script>
+  <script src="/public/js/pjax/jquery.pjax.js"></script>
+  <script src="/public/js/resize/jquery.resize.js"></script>
   <script src="/public/js/swapper.js"></script>
   <script src="/public/js/util.js"></script>
 </head>
-<body class="swap-wrap">
-  {{{ body }}}
-  <script>
-      $(document).ready(function() {
-          if(!window.aux) {
-              window.aux = {};
+<body>
+  <header id="header">
+    <div class="title-bar">
+      <h2>{{ name }}</h2>
+    </div>
+  </header>
+  
+  <div class="pjax-container">
+    {{{ body }}}
+  </div>
+  <script type="text/javascript">
+  (function() {
+      if(!window.aux) {
+          window.aux = {
+              /**
+               * Set the text displayed in the header
+               *
+               * @param {string} text
+               */
+              setHeader: function(text) {
+                  $('#header .title-bar h2').text(text);
+              },
+
+              // array of functions to be called before replacing the
+              // content of .pjax-container
+              beforeReplace: []
+
+          };
+      }
+      
+      var $header = $('#header');
+      window.addEventListener('scroll', function(e) {
+          if(window.pageYOffset > 4) {
+              $header.addClass('active');
+          } else {
+              $header.removeClass('active');
           }
-          window.aux.swapper = new Swapper('.swap-wrap', '', '.swap-page.content');
       });
+      
+      $(document).pjax('a', '.pjax-container');
+      $(document).on('pjax:beforeReplace', function() {
+          var fns = window.aux.beforeReplace;
+          while(fns.length > 0) {
+              (fns.pop())();
+          }
+
+          // end by sliding the pjax container out
+
+      });
+      
+      var $pjaxContainer = $('.pjax-container');
+      $header.resize(function() {
+          $pjaxContainer.css({
+              marginTop: $header.outerHeight() + 'px'
+          });
+      });
+      
+      var resize = function() {
+        $pjaxContainer.css('width', window.innerWidth + 'px');
+      }
+      resize();
+      $(window).resize(resize);
+  }());
   </script>
 </body>
 </html>

@@ -9,20 +9,42 @@ $(document).ready(function() {
         userId = response.user_id;
     });
     
+    // Move the buttons and search bar to the header
+    var $header = $('#header');
+    var $toHeader = $('.to-header')
+        .appendTo($header)
+        .css({
+            opacity: 0
+        })
+        .velocity('slideDown')
+        .velocity({
+            opacity: 1
+        });
+    
+    // add the function to remove this before the next page loads
+    // to the global object's list of functions to call
+    window.aux.beforeReplace.push(function() {
+        $toHeader.velocity({
+            opacity: 0
+        }).velocity('slideUp')
+        .remove();
+    });
+    
+    
     var groupId = $('.group[group-id]').attr('group-id');
     /* page switching */
     var switching = false;
     $('.window-select .button').click(function(e) {
         e.preventDefault();
         
-        // Prevent clicks when we're in the middle of a switch
-        if(switching) return;
-        switching = true;
-        
         // Just quit if the user clicks on a button that's already active
         if($(this).hasClass('active')) {
             return;
         }
+        
+        // Prevent clicks when we're in the middle of a switch
+        if(switching) return;
+        switching = true;
         
         // Get button that was previously selected, make it inactive,
         // make the button that's been clicked active
@@ -74,8 +96,32 @@ $(document).ready(function() {
             .addClass('active')
             .addClass('slide-in-' + dir).show();
         
-        // If we're showing the vote section, then we
-        // want to bring up the winner's circle
+        // If we're showing the add section, then we want to reveal the search
+        // box
+        var $searchWrapper = $('.search-wrapper');
+        if($forSection === 'add') {
+            $searchWrapper
+                .css({
+                    opacity: 0
+                }).velocity('slideDown')
+                .velocity({
+                    opacity: 1
+                });
+        } else {
+            if($searchWrapper.is(':visible')) {
+                $searchWrapper.velocity({
+                    opacity: 0
+                }).velocity('slideUp')
+                .css({
+                    opacity: 1
+                });
+            } else {
+                
+            }
+        }
+        
+        // If we're showing the vote section, then we want to bring up the
+        // winner's circle
         if($forSection === 'vote') {
             groupFns.showWinnersCircle();
         } else {
@@ -324,7 +370,7 @@ $(document).ready(function() {
             }
             
             var $nextElemInner = $nextArtworkElem.parents('.inner');
-            var nextElemSpotifyObject = $nextElemInner.parents('.spotify-object');
+            var $nextElemSpotifyObject = $nextElemInner.parents('.spotify-object');
             
             // First, if we're moving off of a swipe, we'll need to set the
             // artwork's initial position to the position it was swiped to
@@ -342,30 +388,42 @@ $(document).ready(function() {
             
             // Called when it's time to show the next element
             var showNextElement = function() {
-                nextElemSpotifyObject.show();
-                // Animate the next element's copy
-                $nextElemInner.find('.copy').velocity({
-                    opacity: 1,
-                });
+                var afterShift = function() {
+                    $nextElemSpotifyObject.show();
+                    // Animate the next element's copy
+                    $nextElemInner.find('.copy').velocity({
+                        opacity: 1,
+                    });
+
+                    // Before the element is displayed, we'll start transitioning
+                    // into the new background artwork and to the next track
+                    // indicator
+                    groupFns.setBackground($nextArtworkElem.css('background-image'));
+                    groupFns.setTrackNumDisplay(nextSlideOrder);
+
+                    // And animate the next element's album artwork
+                    $nextArtworkElem.show().velocity({
+                        translateX: '0px',
+                        opacity: 1
+                    }, {
+                        delay: 200,
+                        easing: 'spring',
+                        duration: 400,
+                        queue: false,
+                        complete: function() {
+                            // done swiping
+                            groupFns.private.swiping = false;
+                        }
+                    });
+                };
                 
-                // Before the element is displayed, we'll start transitioning
-                // into the new background artwork and to the next track
-                // indicator
-                groupFns.setBackground($nextArtworkElem.css('background-image'));
-                groupFns.setTrackNumDisplay(nextSlideOrder);
-                
-                // And animate the next element's album artwork
-                $nextArtworkElem.velocity({
-                    translateX: '0px',
-                    opacity: 1
+                // Before we show the next element, we make sure that the
+                // artwork is far enough of screen to animate
+                $nextArtworkElem.hide().velocity({
+                    translateX: window.innerWidth + 'px'
                 }, {
-                    delay: 200,
-                    easing: 'spring',
-                    duration: 400,
-                    complete: function() {
-                        // done swiping
-                        groupFns.private.swiping = false;
-                    }
+                    duration: 0,
+                    complete: afterShift
                 });
             };
             
@@ -525,7 +583,7 @@ $(document).ready(function() {
                 groupFns.setTrackNumDisplay(firstResultSlideOrder);
                 
                 // Update the displayed number of results
-                $('.search-results .num-tracks').text($trackElems.length);
+                $('.search-results .num-tracks').text($trackElems.length || 0);
                 
                 
                 // Store each of the tracks in the store of loaded tracks.

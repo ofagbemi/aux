@@ -1,0 +1,46 @@
+#header {
+  width: 100%;
+  background-color: transparent;
+  color: white;
+  padding-top: 20px; /* for status bar */
+  
+  position: fixed;
+  top: 0;
+  left: 0;
+  
+  border-bottom: solid 1px rgba(255, 255, 255, 0.24);
+  
+  z-index: 11;
+  
+  @include box-shadow(0 4px 4px rgba(0, 0, 0, 0.11));
+  @include transition( (background 0.2s, color 0.2s) );
+  
+  
+  $title-bar-height: 50px;
+  .title-bar {
+    color: #ebf6ff;
+    height: $title-bar-height;
+
+    @include display(flex);
+    @include align-items(center);
+    @include justify-content(center);
+
+    h2 {
+      text-transform: uppercase;
+      font-family: 'proxima-nova', sans-serif;
+      font-weight: 400;
+      font-size: 18px;
+      letter-spacing: 1px;
+    }
+  }
+}
+
+#header.active {
+  background-color: white;
+  color: #000000;
+  border-bottom: none;
+  
+    .title-bar {
+      color: #333;
+    }
+}

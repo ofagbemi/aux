@@ -309,7 +309,7 @@ exports.create = function(req, res) {
  */
 exports.index = function(req, res) {
     
-    var layout = req.query.layout !== false;
+    var layout = !req.header('X-PJAX');
     
     if(layout === false) {
         res.status(200).render('index', {layout: false});
@@ -327,8 +327,8 @@ exports.index = function(req, res) {
  * @param res
  */
 exports.find = function(req, res) {
-    var layout = req.query.layout !== 'false' &&
-                 req.query.layout !== false;
+    var layout = !req.header('X-PJAX');
+    
     if(layout === false) {
         res.status(200).render('find', {layout: false});
     } else {
@@ -355,8 +355,7 @@ var generateUserId = function(group_id) {
  * @param res
  */
 exports.show_group = function(req, res) {
-    var layout = req.query.layout !== 'false' &&
-                 req.query.layout !== false;
+    var layout = !req.header('X-PJAX');
     
     var renderGroup = function(err, groupData) {
         if(!err) {
