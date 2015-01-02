@@ -55,10 +55,10 @@
       window.addEventListener('scroll', function(e) {
           if(window.pageYOffset > 0) {
               $header.addClass('active');
-              $statusBarTag.attr('content', 'white-translucent');
+              $statusBarTag.attr('content', 'white-translucent').appendTo($('head'));
           } else {
               $header.removeClass('active');
-              $statusBarTag.attr('content', 'black-translucent');
+              $statusBarTag.attr('content', 'black-translucent').appendTo($('head'));
           }
       });
       
