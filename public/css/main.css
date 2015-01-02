@@ -961,7 +961,7 @@ h1, h2 {
     height: 33px;
     background-image: url('../images/icons/search/noun_62219_cc_white.svg');
     background-size: 24px 24px;
-    background-position: 7px 8px;
+    background-position: 7px 1px;
     position: absolute;
     background-repeat: no-repeat;
     opacity: 0.84; }
@@ -969,7 +969,7 @@ h1, h2 {
     color: inherit;
     display: inline-block;
     width: 100%;
-    padding: 4px 11px 4px 32px;
+    padding: 4px 11px 4px 35px;
     box-sizing: border-box;
     outline: none;
     border: none;
