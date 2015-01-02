@@ -420,7 +420,7 @@ $(document).ready(function() {
                 // Before we show the next element, we make sure that the
                 // artwork is far enough of screen to animate
                 $nextArtworkElem.hide().velocity({
-                    translateX: window.innerWidth + 'px'
+                    translateX: -directionScalar * window.innerWidth + 'px'
                 }, {
                     duration: 0,
                     complete: afterShift
