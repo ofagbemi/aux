@@ -13,6 +13,7 @@
   @include transition( (background 0.8s, opacity 1.8s) );
 }
 
+/*
 #header.active {
   .search-wrapper {
     border-color: rgba(0, 0, 0, 0.24);
@@ -35,6 +36,7 @@
     background-image: url('../images/icons/check/noun_20624_black.svg');
   }
 }
+*/
 
 .search-wrapper {
   margin-top: 11px;

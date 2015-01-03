@@ -55,10 +55,10 @@ h1, h2 {
   -webkit-box-shadow: 0 4px 4px rgba(0, 0, 0, 0.11);
   -moz-box-shadow: 0 4px 4px rgba(0, 0, 0, 0.11);
   box-shadow: 0 4px 4px rgba(0, 0, 0, 0.11);
-  -webkit-transition: background 0.2s, color 0.2s;
-  -moz-transition: background 0.2s, color 0.2s;
-  -o-transition: background 0.2s, color 0.2s;
-  transition: background 0.2s, color 0.2s; }
+  -webkit-transition: background 0.2s, color 0.2s, border-bottom-color 0.2s;
+  -moz-transition: background 0.2s, color 0.2s, border-bottom-color 0.2s;
+  -o-transition: background 0.2s, color 0.2s, border-bottom-color 0.2s;
+  transition: background 0.2s, color 0.2s, border-bottom-color 0.2s; }
   #header .title-bar {
     color: #ebf6ff;
     height: 50px;
@@ -82,11 +82,17 @@ h1, h2 {
       letter-spacing: 1px; }
 
 #header.active {
+  background-color: rgba(0, 0, 0, 0.8);
+  border-bottom-color: transparent;
+  /*
   background-color: white;
   color: #000000;
-  border-bottom: none; }
-  #header.active .title-bar {
-    color: #333; }
+  border-bottom: none;
+  
+    .title-bar {
+      color: #333;
+    }
+  */ }
 
 .search-results {
   margin-bottom: 24px; }
@@ -939,18 +945,30 @@ h1, h2 {
   -o-transition: background 0.8s, opacity 1.8s;
   transition: background 0.8s, opacity 1.8s; }
 
-#header.active .search-wrapper {
-  border-color: rgba(0, 0, 0, 0.24);
-  border-bottom: none; }
-  #header.active .search-wrapper label {
-    background-image: url('../images/icons/search/noun_62219_cc_black.svg'); }
-#header.active .listen.button:before {
-  background-image: url('../images/icons/headphones/noun_3779_cc_black.svg'); }
-#header.active .add.button:before {
-  background-image: url('../images/icons/add/noun_18981_cc_black.svg'); }
-#header.active .vote.button:before {
-  background-image: url('../images/icons/check/noun_20624_black.svg'); }
-
+/*
+#header.active {
+  .search-wrapper {
+    border-color: rgba(0, 0, 0, 0.24);
+    border-bottom: none;
+    
+    label {
+      background-image: url('../images/icons/search/noun_62219_cc_black.svg');
+    }
+  }
+  
+  .listen.button:before {
+    background-image: url('../images/icons/headphones/noun_3779_cc_black.svg');
+  }
+  
+  .add.button:before {
+    background-image: url('../images/icons/add/noun_18981_cc_black.svg');
+  }
+  
+  .vote.button:before {
+    background-image: url('../images/icons/check/noun_20624_black.svg');
+  }
+}
+*/
 .search-wrapper {
   margin-top: 11px;
   text-align: center;
