@@ -20,11 +20,28 @@
   .title-bar {
     color: #ebf6ff;
     height: $title-bar-height;
+    position: relative;
 
     @include display(flex);
     @include align-items(center);
     @include justify-content(center);
 
+    #back-button {
+      position: absolute;
+      left: 12px;
+      top: 12px;
+      width: 32px;
+      height: 24px;
+      background-image: url('../images/icons/back/noun_30451_cc_white.svg');
+      background-size: cover;
+      
+      @include transition(opacity 0.8s);
+    }
+    
+    #back-button:active {
+      opacity: 0.1;
+    }
+    
     h2 {
       text-transform: uppercase;
       font-family: 'proxima-nova', sans-serif;

@@ -23,6 +23,7 @@
 <body>
   <header id="header">
     <div class="title-bar">
+      <div id="back-button"></div>
       <h2>{{ name }}</h2>
     </div>
   </header>
@@ -71,6 +72,22 @@
 
           // end by sliding the pjax container out
 
+      });
+      
+      // set up back button
+      var $backButton = $('#back-button');
+      $backButton.click(function(e) {
+          e.preventDefault();
+          window.history.back();
+      });
+      
+      // show the back button on every page except the index
+      $(document).on('pjax:complete', function() {
+          if($('.index.content').length > 0) {
+              $backButton.hide();
+          } else {
+              $backButton.show();
+          }
       });
       
       var $pjaxContainer = $('.pjax-container');
