@@ -7,11 +7,9 @@
   position: fixed;
   top: 0;
   left: 0;
-  
   z-index: 11;
   
-  @include box-shadow(0 4px 4px rgba(0, 0, 0, 0.11));
-  @include transition( (background 0.2s, color 0.2s, border-bottom-color 0.2s) );
+  @include transition( (background 0.2s, color 0.2s, border-bottom-color 0.2s, box-shadow 0.2s) );
   
   
   $title-bar-height: 50px;
@@ -53,13 +51,6 @@
 #header.active {
   background-color: rgba(0, 0, 0, 0.8);
   border-bottom-color: transparent;
-  /*
-  background-color: white;
-  color: #000000;
-  border-bottom: none;
   
-    .title-bar {
-      color: #333;
-    }
-  */
+  @include box-shadow(0 4px 4px rgba(0, 0, 0, 0.11));
 }

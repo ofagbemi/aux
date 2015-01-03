@@ -51,13 +51,10 @@ h1, h2 {
   top: 0;
   left: 0;
   z-index: 11;
-  -webkit-box-shadow: 0 4px 4px rgba(0, 0, 0, 0.11);
-  -moz-box-shadow: 0 4px 4px rgba(0, 0, 0, 0.11);
-  box-shadow: 0 4px 4px rgba(0, 0, 0, 0.11);
-  -webkit-transition: background 0.2s, color 0.2s, border-bottom-color 0.2s;
-  -moz-transition: background 0.2s, color 0.2s, border-bottom-color 0.2s;
-  -o-transition: background 0.2s, color 0.2s, border-bottom-color 0.2s;
-  transition: background 0.2s, color 0.2s, border-bottom-color 0.2s; }
+  -webkit-transition: background 0.2s, color 0.2s, border-bottom-color 0.2s, box-shadow 0.2s;
+  -moz-transition: background 0.2s, color 0.2s, border-bottom-color 0.2s, box-shadow 0.2s;
+  -o-transition: background 0.2s, color 0.2s, border-bottom-color 0.2s, box-shadow 0.2s;
+  transition: background 0.2s, color 0.2s, border-bottom-color 0.2s, box-shadow 0.2s; }
   #header .title-bar {
     color: #ebf6ff;
     height: 50px;
@@ -98,15 +95,9 @@ h1, h2 {
 #header.active {
   background-color: rgba(0, 0, 0, 0.8);
   border-bottom-color: transparent;
-  /*
-  background-color: white;
-  color: #000000;
-  border-bottom: none;
-  
-    .title-bar {
-      color: #333;
-    }
-  */ }
+  -webkit-box-shadow: 0 4px 4px rgba(0, 0, 0, 0.11);
+  -moz-box-shadow: 0 4px 4px rgba(0, 0, 0, 0.11);
+  box-shadow: 0 4px 4px rgba(0, 0, 0, 0.11); }
 
 .search-results {
   margin-bottom: 24px; }
@@ -1176,8 +1167,8 @@ h1, h2 {
     display: inline-block;
     background-size: cover;
     background-position: center;
-    margin: 28px 0 18px 0;
-    border-radius: 4px; }
+    margin: 20px 0 14px 0;
+    border-radius: 2px; }
   .winners-circle .info {
     color: rgba(255, 255, 255, 0.88);
     text-shadow: 0 0 2px rgba(0, 0, 0, 0.14);
@@ -1186,11 +1177,11 @@ h1, h2 {
     .winners-circle .info .track {
       font-weight: 200;
       letter-spacing: 1px;
-      font-size: 36px;
+      font-size: 32px;
       margin-bottom: 8px; }
     .winners-circle .info .description {
       font-family: 'Helvetica', 'Helvetica Neue', sans-serif;
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 400; }
       .winners-circle .info .description .artist {
         color: rgba(255, 255, 255, 0.88);
@@ -1198,7 +1189,7 @@ h1, h2 {
         font-weight: 200;
         letter-spacing: 1px; }
     .winners-circle .info .votes {
-      margin: 18px 0 0 0;
+      margin: 8px 0 0 0;
       font-weight: 200; }
       .winners-circle .info .votes .num-votes {
         font-weight: 200;
@@ -1228,9 +1219,9 @@ h1, h2 {
     text-shadow: 0 0 2px rgba(0, 0, 0, 0.25); }
     .voting-object .copy .header {
       margin-bottom: 2px;
-      font-weight: 500;
+      font-weight: 400;
       letter-spacing: 1px;
-      font-size: 16px; }
+      font-size: 14px; }
     .voting-object .copy .body {
       font-size: 12px;
       font-weight: 400; }
@@ -1241,9 +1232,9 @@ h1, h2 {
     display: -ms-inline-flex;
     display: inline-flex;
     text-transform: uppercase;
-    font-weight: 200;
+    font-weight: 400;
     text-shadow: 0 0 2px rgba(0, 0, 0, 0.4);
-    font-size: 18px;
+    font-size: 12px;
     -webkit-align-items: center;
     -moz-align-items: center;
     -ms-align-items: center;
